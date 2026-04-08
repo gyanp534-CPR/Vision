@@ -1,28 +1,28 @@
 :root { --primary: #0ea5e9; --bg: #0f172a; --card: #1e293b; --success: #10b981; --danger: #ef4444; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; text-align: center; background: var(--bg); color: white; margin: 0; overflow-x: hidden; }
 
-/* Dashboard & Video */
+/* Dashboard Core */
 #dashboard { padding: 20px; display: flex; flex-direction: column; align-items: center; max-width: 500px; margin: auto; transition: 0.3s; }
 #status-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; width: 100%; border: 1px solid #334155; }
 #video-container { position: relative; width: 220px; height: 220px; border-radius: 50%; overflow: hidden; border: 4px solid var(--primary); background: #000; margin: 10px 0; }
 #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 .low-light-boost { filter: brightness(1.5) contrast(1.2) saturate(1.1); }
 
-/* Controls */
+/* Controls Grid */
 .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 15px; }
 button { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
 button:active { transform: scale(0.95); }
 .btn-full { grid-column: span 2; }
 .btn-scan { background: var(--success); }
 .btn-night { background: #4b5563; }
+.cancel-btn { margin-top:20px; background:#cbd5e1; color:#333; width:100%; max-width:400px; }
 
-/* Calibration UI */
+/* Calibration & Toggles */
 #calibration-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.95); z-index:99999; display:flex; align-items:center; justify-content:center; }
 .calib-box { background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
 #calib-card { width: 250px; height: 158px; background: #0ea5e9; border-radius: 10px; margin: 20px auto; transition: width 0.1s; }
 #calib-slider { width: 100%; margin-top: 15px; }
 
-/* Pediatric Toggle Switch */
 .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 24px; }
@@ -30,19 +30,20 @@ button:active { transform: scale(0.95); }
 input:checked + .slider { background-color: var(--primary); }
 input:checked + .slider:before { transform: translateX(26px); }
 
-/* Fullscreen Rooms */
+/* Fullscreen Rooms & Specifics */
 .fullscreen-room { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8fafc; color: #1e293b; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-.mini-cam { position: absolute; top: 20px; right: 20px; width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary); overflow: hidden; background: black; }
+.mini-cam { position: absolute; top: 20px; right: 20px; width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary); overflow: hidden; background: black; z-index: 10; }
 .mini-cam video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 .test-box { background: white; border: 1px solid #e2e8f0; padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
-/* Color Test */
 #plate-img { width: 220px; height: 220px; border-radius: 50%; border: 5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin: 15px 0; }
 .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 300px; }
 .key-btn { background: white; border: 2px solid #cbd5e1; color: var(--primary); font-size: 18px; padding: 15px; }
-
-/* Fixation Target */
 #target-dot { position: absolute; width: 25px; height: 25px; background: #ec4899; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: all 0.5s ease-in-out; }
+#amsler-canvas { background-color: white; cursor: crosshair; }
 
-/* Reports */
+/* Vault Gallery */
+.vault-img-card { background: var(--card); padding: 10px; border-radius: 10px; border: 1px solid #334155; }
+.vault-img-card img { width: 100%; border-radius: 8px; }
+
 #report-overlay { display: none; background: white; color: #1e293b; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-top: 20px; text-align: left; border-top: 8px solid var(--primary); }
