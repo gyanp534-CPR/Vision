@@ -1,0 +1,193 @@
+:root {
+    --primary: #0ea5e9;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --success: #10b981;
+    --danger: #ef4444;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    text-align: center;
+    background: var(--bg);
+    color: white;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* Dashboard Layout */
+#dashboard {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 500px;
+    margin: auto;
+}
+
+#status-bar {
+    background: var(--card);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    width: 100%;
+    border: 1px solid #334155;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+#video-container {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid var(--primary);
+    background: #000;
+    margin: 10px 0;
+}
+
+#webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Low Light Filter */
+.low-light-boost {
+    filter: brightness(1.4) contrast(1.2) saturate(1.1);
+}
+
+/* Buttons */
+#controls {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+.btn-scan {
+    background: var(--success);
+}
+
+/* Fullscreen Test Room */
+#test-room {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    color: black;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+#mini-cam-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--primary);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background: black;
+}
+
+#mini-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+/* Reading Content */
+#sample-box {
+    width: 100%;
+    max-width: 400px;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    margin: 30px 0;
+    background: #f8fafc;
+    text-align: center;
+    font-family: serif;
+}
+
+.room-controls {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.btn-room-pass {
+    flex: 2;
+    background: var(--success);
+    color: white;
+}
+
+.btn-room-fail {
+    flex: 1;
+    background: var(--danger);
+    color: white;
+}
+
+/* History & Reports */
+#report-overlay {
+    display: none;
+    background: white;
+    color: #1e293b;
+    padding: 25px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    margin-top: 20px;
+    text-align: left;
+    border-top: 8px solid var(--primary);
+}
+
+#history-list {
+    margin-top: 30px;
+    width: 100%;
+    text-align: left;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.hist-item {
+    background: var(--card);
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border-left: 4px solid var(--primary);
+    font-size: 13px;
+}
