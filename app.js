@@ -10,7 +10,7 @@ const reportOverlay = document.getElementById("report-overlay");
 let faceLandmarker;
 let currentMode = "dashboard"; // dashboard, reading, scan
 let readingLevel = 18; 
-let results = { reading: "Not Tested", surface: "Not Tested" };
+let results = { reading: "Not Tested", surface: "Not Tested", color: "Not Tested" };
 let isLowLightBoost = false;
 
 const readingSamples = [
@@ -180,6 +180,29 @@ window.toggleLowLight = async () => {
         btn.style.background = "#4b5563";
         videoEl.classList.remove("low-light-boost");
     }
+};
+
+
+
+window.openColorRoom = () => {
+    document.getElementById("color-room").style.display = "flex";
+};
+
+window.closeColorRoom = () => {
+    document.getElementById("color-room").style.display = "none";
+};
+
+window.checkColor = (num) => {
+    // Basic Logic: Plate shown is '9'
+    if (num === 9) {
+        results.color = "Normal (Passed)";
+        alert("Correct! Your color perception for this plate is sharp.");
+    } else {
+        results.color = "Deficiency Detected";
+        alert("Incorrect. This might indicate a color vision deficiency.");
+    }
+    closeColorRoom();
+    showFinalReport();
 };
 
 initAI();
