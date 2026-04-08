@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gyanam Vision Pro AI - Clinical Suite</title>
+    <title>Gyanam Vision Pro AI - Ultimate Clinical Suite</title>
     <link rel="stylesheet" href="style.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
     <div id="dashboard">
         <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;">
-            <h3 style="margin:0; color:var(--primary);">Gyanam Vision Pro</h3>
+            <h3 id="app-title" style="margin:0; color:var(--primary);">Gyanam Vision Pro</h3>
+            <button onclick="toggleLanguage()" id="lang-btn" style="width:auto; padding:5px 15px; background:#334155; font-size:18px;">A/अ</button>
         </div>
 
         <div style="background:var(--card); width:100%; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #334155; text-align:left; box-sizing:border-box;">
-            <label style="font-size:12px; color:#cbd5e1;">Patient Name:</label>
-            <input type="text" id="patient-name" placeholder="Enter patient name..." style="width:100%; padding:10px; margin-top:5px; border-radius:8px; border:none; background:#0f172a; color:white; font-size:16px; box-sizing:border-box;">
+            <label id="lbl-name" style="font-size:12px; color:#cbd5e1;">Patient Name:</label>
+            <input type="text" id="patient-name" placeholder="Enter patient name..." style="width:100%; padding:12px; margin-top:5px; border-radius:8px; border:none; background:#0f172a; color:white; font-size:18px; box-sizing:border-box;">
         </div>
 
         <div id="status-bar">
@@ -25,67 +27,108 @@
             <div id="pd-display" style="display:none; font-size:16px; font-weight:bold; color:var(--success); margin-top:5px;">Est. PD: <span id="pd-value">--</span> mm</div>
         </div>
 
-        <div id="video-container"><video id="webcam" autoplay playsinline muted></video></div>
+        <div id="video-container">
+            <video id="webcam" autoplay playsinline muted></video>
+        </div>
+
+        <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-top:10px; width:100%;">
+            <span id="lbl-std" style="font-size:13px; color:#cbd5e1;">Standard</span>
+            <label class="switch"><input type="checkbox" id="pediatric-toggle" onchange="togglePediatric()"><span class="slider round"></span></label>
+            <span id="lbl-ped" style="font-size:13px; color:#cbd5e1;">Pediatric (Shapes)</span>
+        </div>
 
         <div class="controls-grid">
-            <button onclick="measurePD()" style="background: #14b8a6;">📏 Auto-PD</button>
-            <button onclick="openReadingRoom()">📖 Acuity (Voice)</button>
-            <button onclick="openAstigRoom()" style="background: #a855f7;">☀️ Astigmatism</button>
-            <button onclick="openColorRoom()" style="background: #f59e0b;">🎨 Color Test</button>
-            <button onclick="openContrastRoom()" style="background: #64748b;">🌗 Contrast</button>
-            <button onclick="openAmslerRoom()" style="background: #eab308;">🕸️ Macular Grid</button>
-            <button onclick="openPeripheralRoom()" style="background: #0f172a; border: 1px solid #334155;">🌌 Peripheral</button>
-            <button onclick="openBlinkRoom()" style="background: #8b5cf6;">👁️ Eye Strain</button>
-            <button onclick="openFixationRoom()" style="background: #ec4899;">🎯 Strabismus</button>
-            <button onclick="triggerMacroScan()" class="btn-scan btn-full">📸 AI Cataract & Retina Scan</button>
-            <button onclick="openVaultRoom()" class="btn-full" style="background: #3b82f6;">🖼️ Patient Vault</button>
+            <button onclick="toggleLowLight()" id="lowlight-btn" class="btn-night">🌙 Night Mode</button>
+            <button id="btn-pd" onclick="measurePD()" style="background: #14b8a6;">📏 Auto-PD</button>
+            
+            <button id="btn-acuity" onclick="openReadingRoom()">📖 Acuity (Voice)</button>
+            <button id="btn-astig" onclick="openAstigRoom()" style="background: #a855f7;">☀️ Astigmatism</button>
+            
+            <button id="btn-color" onclick="openColorRoom()" style="background: #f59e0b;">🎨 Color Test</button>
+            <button id="btn-contrast" onclick="openContrastRoom()" style="background: #64748b;">🌗 Contrast</button>
+            
+            <button id="btn-amsler" onclick="openAmslerRoom()" style="background: #eab308;">🕸️ Macular Grid</button>
+            <button id="btn-periph" onclick="openPeripheralRoom()" style="background: #0f172a; border: 1px solid #334155;">🌌 Peripheral</button>
+            
+            <button id="btn-strain" onclick="openBlinkRoom()" style="background: #8b5cf6;">👁️ Eye Strain</button>
+            <button id="btn-fixation" onclick="openFixationRoom()" style="background: #ec4899;">🎯 Strabismus</button>
+            
+            <button id="btn-retina" onclick="triggerMacroScan()" class="btn-scan btn-full">📸 AI Cataract & Retina Scan</button>
+            <button id="btn-vault" onclick="openVaultRoom()" class="btn-full" style="background: #3b82f6;">🖼️ Patient Image Vault</button>
         </div>
 
         <div id="report-overlay">
-            <h3 style="margin:0; color:var(--primary);">Clinical Report</h3>
-            <p style="font-size:14px; color:#cbd5e1; margin-top:5px;">Patient: <span id="r-name" style="color:white; font-weight:bold;">Guest</span></p>
+            <h3 id="rep-title" style="margin:0; color:var(--primary);">Comprehensive Report</h3>
+            <p id="lbl-patient-id" style="font-size:14px; color:#cbd5e1; margin-top:5px;">Patient ID: <span id="r-name" style="color:white; font-weight:bold;">Guest</span></p>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
             <p><strong>PD:</strong> <span id="r-pd">--</span></p>
             <p><strong>Acuity:</strong> <span id="r-vision">--</span></p>
             <p><strong>Astigmatism:</strong> <span id="r-astig">--</span></p>
             <p><strong>Contrast:</strong> <span id="r-contrast">--</span></p>
-            <p><strong>Color:</strong> <span id="r-color">--</span></p>
+            <p><strong>Color Vision:</strong> <span id="r-color">--</span></p>
             <p><strong>Peripheral:</strong> <span id="r-periph">--</span></p>
             <p><strong>Macular:</strong> <span id="r-amsler">--</span></p>
             <p><strong>Strabismus:</strong> <span id="r-fixation">--</span></p>
-            <p><strong>Strain:</strong> <span id="r-blinks">--</span></p>
+            <p><strong>Eye Strain:</strong> <span id="r-blinks">--</span></p>
             <p><strong>Pathology AI:</strong> <span id="r-surface">--</span></p>
             
             <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
-                <button onclick="shareWhatsApp()" style="background:#25D366;">💬 WhatsApp Report</button>
+                <button id="btn-wa" onclick="shareWhatsApp()" style="background:#25D366;">💬 Send via WhatsApp</button>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="exportPDF()" style="flex:1; background:#ef4444;">📄 Save PDF</button>
-                    <button onclick="location.reload()" style="flex:1; background:#334155;">Reset</button>
+                    <button id="btn-pdf" onclick="exportPDF()" style="flex:1; background:#ef4444;">📄 Save PDF</button>
+                    <button id="btn-reset" onclick="location.reload()" style="flex:1; background:#334155;">Reset</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="reading-room" class="fullscreen-room"><div class="mini-cam"><video id="mini-video-1" autoplay playsinline muted></video></div><h2 style="margin:0;">Near Vision</h2><p id="room-dist-msg" style="color: #64748b; font-weight: 600;">Aligning...</p><p id="voice-status" style="font-size:12px; color:var(--primary);">🎙️ Listening... Say "Clear" or "Blurry"</p><div class="test-box"><span id="room-text" style="font-size: 18px; font-family: serif;">Loading...</span></div><div style="display:flex; gap:10px; width:100%; max-width:400px;"><button onclick="passReading()" style="flex:2; background:var(--success);">Clear</button><button onclick="failReading()" style="flex:1; background:var(--danger);">Blurry</button></div><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
-    
-    <div id="astig-room" class="fullscreen-room"><h2 style="margin:0;">Astigmatism</h2><p style="color: #64748b;">Do any lines look thicker/darker?</p><canvas id="astig-canvas" width="250" height="250" style="margin:20px 0; background:white; border-radius:50%; padding:10px;"></canvas><div style="display:flex; gap:10px; width:100%; max-width:300px;"><button onclick="submitAstig(true)" style="flex:1; background:var(--danger);">Yes</button><button onclick="submitAstig(false)" style="flex:1; background:var(--success);">No</button></div><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
-    
-    <div id="peripheral-room" class="fullscreen-room" style="background:#000; color:white;" onclick="registerPeripheralClick()"><h2 style="margin-top:20px;">Peripheral Vision</h2><p style="font-size:14px; color:#94a3b8;">Tap when you see flashes in the corners.</p><div class="center-focus-dot"></div><div id="flash-dot" class="peripheral-flash" style="display:none;"></div><button onclick="startPeripheralTest(event)" id="start-periph-btn" style="position:absolute; bottom:40px; left:50%; transform:translateX(-50%); width:80%; max-width:300px; z-index:10;">Start Test</button></div>
-    <div id="contrast-room" class="fullscreen-room"><h2 style="margin:0;">Contrast</h2><div class="test-box"><span id="contrast-text" style="font-size: 24px; font-weight:bold; color:black; transition: color 0.3s;">V R S K D R</span></div><div style="display:flex; gap:10px; width:100%; max-width:400px;"><button onclick="passContrast()" style="flex:2; background:var(--success);">Read</button><button onclick="failContrast()" style="flex:1; background:var(--danger);">Faded</button></div><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
-    <div id="amsler-room" class="fullscreen-room"><h2 style="margin:0;">Macular Grid</h2><p style="color: #64748b; font-size:14px;">Tap any wavy lines.</p><div style="position:relative; width:300px; height:300px; margin:20px 0; border:2px solid #333;"><canvas id="amsler-canvas" width="300" height="300" onclick="markAmslerDefect(event)"></canvas><div style="position:absolute; top:145px; left:145px; width:10px; height:10px; background:black; border-radius:50%;"></div></div><div style="display:flex; gap:10px; width:100%; max-width:300px;"><button onclick="submitAmsler(true)" style="flex:1; background:var(--danger);">Save</button><button onclick="submitAmsler(false)" style="flex:1; background:var(--success);">Perfect</button></div></div>
-    
-    <div id="vault-room" class="fullscreen-room" style="background:#0f172a; color:white;"><h2 style="margin:0; color:var(--primary);">Image Vault</h2><div id="gallery" style="width:100%; max-width:400px; height:60vh; overflow-y:auto; margin-top:20px; display:flex; flex-direction:column; gap:15px;"></div><button onclick="clearVault()" style="background:var(--danger); width:100%; max-width:400px; margin-top:10px;">Clear Data</button><button onclick="closeRooms()" style="background:#334155; width:100%; max-width:400px; margin-top:10px;">Back</button></div>
-    
-    <div id="color-room" class="fullscreen-room">
-        <h2 style="margin:0;">Color Vision</h2>
-        <p id="color-progress" style="color: #64748b; font-size:14px;">Plate 1 of 3</p>
-        <img id="plate-img" src="" style="width: 220px; height: 220px; border-radius: 50%; border: 5px solid white; margin: 15px 0;">
-        <div class="keypad" id="color-keypad"></div>
+    <div id="reading-room" class="fullscreen-room">
+        <div class="mini-cam"><video id="mini-video-1" autoplay playsinline muted></video></div>
+        <h2 id="acuity-title" style="margin:0;">Near Vision</h2>
+        <p id="room-dist-msg" style="color: #64748b; font-weight: 600;">Aligning...</p>
+        <p id="voice-status" style="font-size:12px; color:var(--primary);">🎙️ Listening... Say "Clear" / "Saaf" or "Blurry" / "Dhundhla"</p>
+        <div class="test-box"><span id="room-text" style="font-size: 18px; font-family: serif;">Loading...</span></div>
+        <div style="display:flex; gap:10px; width:100%; max-width:400px;">
+            <button id="btn-acuity-clear" onclick="passReading()" style="flex:2; background:var(--success);">Clear</button>
+            <button id="btn-acuity-blurry" onclick="failReading()" style="flex:1; background:var(--danger);">Blurry</button>
+        </div>
         <button onclick="closeRooms()" class="cancel-btn">Cancel</button>
     </div>
+
+    <div id="astig-room" class="fullscreen-room">
+        <h2 id="astig-title" style="margin:0;">Astigmatism</h2>
+        <p id="astig-progress" style="color: #64748b; font-size:14px;">Stage 1 of 3</p>
+        <p id="lbl-astig-prompt" style="color: #64748b;">Do lines look uneven or thicker?</p>
+        <canvas id="astig-canvas" width="250" height="250" style="margin:20px 0; background:white; border-radius:50%; padding:10px;"></canvas>
+        <div style="display:flex; gap:10px; width:100%; max-width:300px;">
+            <button id="btn-astig-yes" onclick="submitAstig(true)" style="flex:1; background:var(--danger);">Yes (Uneven)</button>
+            <button id="btn-astig-no" onclick="submitAstig(false)" style="flex:1; background:var(--success);">No (All Equal)</button>
+        </div>
+        <button onclick="closeRooms()" class="cancel-btn">Cancel</button>
+    </div>
+
+    <div id="color-room" class="fullscreen-room">
+        <h2 id="color-title" style="margin:0;">Color Vision</h2>
+        <p id="color-progress" style="color: #64748b; font-size:14px;">Plate 1 of 3</p>
+        <p id="lbl-color-prompt" style="color: #64748b;">What number is hidden inside?</p>
+        <img id="plate-img" src="" style="width: 220px; height: 220px; border-radius: 50%; border: 5px solid white; margin: 15px 0;">
+        <div class="test-box" style="padding:10px; max-width:300px;">
+            <input type="number" id="color-ans-input" placeholder="Type Hidden Number..." style="width:100%; padding:12px; border-radius:8px; border:2px solid #cbd5e1; font-size:18px; text-align:center;">
+        </div>
+        <div style="display:flex; gap:10px; width:100%; max-width:300px; margin-top:10px;">
+            <button id="btn-color-next" onclick="submitColorAnswer()" style="flex:2; background:var(--primary);">Next Plate</button>
+            <button id="btn-color-none" onclick="submitColorAnswer('None')" style="flex:1; background:#94a3b8;">None</button>
+        </div>
+        <button onclick="closeRooms()" class="cancel-btn">Cancel</button>
+    </div>
+
+    <div id="peripheral-room" class="fullscreen-room" style="background:#000; color:white;" onclick="registerPeripheralClick()"><h2 style="margin-top:20px;">Peripheral Vision</h2><p style="font-size:14px; color:#94a3b8;">Tap ANYWHERE when you see flashes in the corners.</p><div class="center-focus-dot"></div><div id="flash-dot" class="peripheral-flash" style="display:none;"></div><button onclick="startPeripheralTest(event)" id="start-periph-btn" style="position:absolute; bottom:40px; left:50%; transform:translateX(-50%); width:80%; max-width:300px; z-index:10;">Start Test</button></div>
+    <div id="contrast-room" class="fullscreen-room"><h2 style="margin:0;">Contrast</h2><div class="test-box"><span id="contrast-text" style="font-size: 24px; font-weight:bold; color:black; transition: color 0.3s;">V R S K D R</span></div><div style="display:flex; gap:10px; width:100%; max-width:400px;"><button id="btn-contrast-pass" onclick="passContrast()" style="flex:2; background:var(--success);">Read It</button><button id="btn-contrast-fail" onclick="failContrast()" style="flex:1; background:var(--danger);">Faded</button></div><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
+    <div id="amsler-room" class="fullscreen-room"><h2 style="margin:0;">Macular Grid</h2><p style="color: #64748b; font-size:14px;">Tap wavy/missing lines.</p><div style="position:relative; width:300px; height:300px; margin:20px 0; border:2px solid #333;"><canvas id="amsler-canvas" width="300" height="300" onclick="markAmslerDefect(event)"></canvas><div style="position:absolute; top:145px; left:145px; width:10px; height:10px; background:black; border-radius:50%;"></div></div><div style="display:flex; gap:10px; width:100%; max-width:300px;"><button id="btn-amsler-save" onclick="submitAmsler(true)" style="flex:1; background:var(--danger);">Save</button><button id="btn-amsler-perfect" onclick="submitAmsler(false)" style="flex:1; background:var(--success);">Perfect</button></div></div>
+    <div id="vault-room" class="fullscreen-room" style="background:#0f172a; color:white;"><h2 style="margin:0; color:var(--primary);">Patient Vault</h2><div id="gallery" style="width:100%; max-width:400px; height:60vh; overflow-y:auto; margin-top:20px; display:flex; flex-direction:column; gap:15px;"></div><button id="btn-vault-clear" onclick="clearVault()" style="background:var(--danger); width:100%; max-width:400px; margin-top:10px;">Clear All Data</button><button onclick="closeRooms()" style="background:#334155; width:100%; max-width:400px; margin-top:10px;">Back</button></div>
     
-    <div id="blink-room" class="fullscreen-room"><div class="mini-cam"><video id="mini-video-2" autoplay playsinline muted></video></div><h2 style="margin:0;">Eye Strain</h2><h1 id="blink-timer" style="color:var(--primary); font-size:40px; margin:0;">15s</h1><p>Blinks: <b id="blink-count-ui">0</b></p><button onclick="startBlinkTest()" id="start-blink-btn" style="width:100%; max-width:400px;">Start</button><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
-    <div id="fixation-room" class="fullscreen-room"><div class="mini-cam"><video id="mini-video-3" autoplay playsinline muted></video></div><h2 style="margin:0;">Neural Tracking</h2><div id="tracking-arena" style="position:relative; width:100%; max-width:350px; height:300px; border:2px dashed #cbd5e1; margin:20px 0; border-radius:15px; overflow:hidden;"><div id="target-dot"></div></div><button onclick="startFixationTest()" id="start-fix-btn" style="width:100%; max-width:350px; background:var(--primary);">Start</button><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
+    <div id="blink-room" class="fullscreen-room"><div class="mini-cam"><video id="mini-video-2" autoplay playsinline muted></video></div><h2 id="strain-title" style="margin:0;">Eye Strain</h2><h1 id="blink-timer" style="color:var(--primary); font-size:40px; margin:0;">15s</h1><p>Blinks: <b id="blink-count-ui">0</b></p><button id="start-blink-btn" onclick="startBlinkTest()" style="width:100%; max-width:400px;">Start Monitor</button><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
+    <div id="fixation-room" class="fullscreen-room"><div class="mini-cam"><video id="mini-video-3" autoplay playsinline muted></video></div><h2 id="fix-title" style="margin:0;">Neural Tracking</h2><div id="tracking-arena" style="position:relative; width:100%; max-width:350px; height:300px; border:2px dashed #cbd5e1; margin:20px 0; border-radius:15px; overflow:hidden;"><div id="target-dot"></div></div><button id="start-fix-btn" onclick="startFixationTest()" style="width:100%; max-width:350px; background:var(--primary);">Start Tracking</button><button onclick="closeRooms()" class="cancel-btn">Cancel</button></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs" type="module"></script>
     <script src="app.js" type="module"></script>
