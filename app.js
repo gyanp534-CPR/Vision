@@ -7,14 +7,12 @@ const modeText = document.getElementById("mode-text");
 let faceLandmarker;
 let currentMode = "dashboard"; 
 let isLowLightBoost = false, isPediatric = false;
-let screenPPI = window.devicePixelRatio * 160; // FIX 4: Auto calibration approximation based on typical mobile pixel density
+let screenPPI = window.devicePixelRatio * 160; 
 let currentEyeDistPx = 0; 
 let currentLang = 'en';
 
-// Master Results Object
 let results = { pd: "--", patientId: "Guest", reading: "Not Tested", astig: "--", periph: "--", contrast: "--", color: "--", amsler: "--", blinks: "--", fixation: "--", surface: "Not Scanned" };
 
-// --- Localization Engine ---
 const t = {
     en: { title: "Gyanam Vision Pro", nameLbl: "Patient Name:", namePlc: "Enter patient name...",std: "Standard", ped: "Pediatric", pd: "📏 Auto-PD", acuity: "📖 Acuity (Voice)", astig: "☀️ Astigmatism", color: "🎨 Color Test", contrast: "🌗 Contrast", amsler: "🕸️ Macular Grid", periph: "🌌 Peripheral", strain: "👁️ Eye Strain", fix: "🎯 Strabismus", retina: "📸 AI Cataract Scan", vault: "🖼️ Patient Vault", rep: "Comprehensive Report", patId: "Patient ID:", cancel: "Cancel", reset: "Reset", clear: "Clear", blurry: "Blurry", promptA: "Uneven?", promptC: "Hidden Number?", nextP: "Next Plate", startM: "Start Monitor", startT: "Start Tracking", uneven: "Yes (Uneven)", equal: "No (All Equal)"},
     hi: { title: "ज्ञानम् विजन प्रो", nameLbl: "मरीज का नाम:", namePlc: "मरीज का नाम लिखें...", std: "सामान्य", ped: "बाल रोग (आकार)", pd: "📏 ऑटो-पीडी", acuity: "📖 दृष्टि परीक्षण", astig: "☀️ दृष्टिवैषम्य", color: "🎨 रंग परीक्षण", contrast: "🌗 कंट्रास्ट", amsler: "🕸️ मैक्यूलर ग्रिड", periph: "🌌 परिधीय दृष्टि", strain: "👁️ आँखों का तनाव", fix: "🎯 भेंगापन", retina: "📸 एआई मोतियाबिंद स्कैन", vault: "🖼️ मरीज वॉल्ट", rep: "क्लिनिकल रिपोर्ट", patId: "मरीज की आईडी:", cancel: "बंद करें", reset: "रीसेट", clear: "साफ", blurry: "धुंधला", promptA: "असमान?", promptC: "छुपा नंबर?", nextP: "अगली प्लेट", startM: "निगरानी शुरू", startT: "ट्रैकिंग शुरू", uneven: "हां (असमान)", equal: "नहीं (सब बराबर)"}
@@ -23,49 +21,20 @@ const t = {
 window.toggleLanguage = () => {
     currentLang = currentLang === 'en' ? 'hi' : 'en';
     const l = t[currentLang];
-    document.getElementById("app-title").innerText = l.title;
-    document.getElementById("lbl-name").innerText = l.nameLbl;
-    document.getElementById("patient-name").placeholder = l.namePlc;
-    document.getElementById("lbl-std").innerText = l.std;
-    document.getElementById("lbl-ped").innerText = l.ped;
-    document.getElementById("rep-title").innerText = l.rep;
-    document.getElementById("lbl-patient-id").innerText = l.patId;
-    document.getElementById("btn-color-next").innerText = l.nextP;
-    document.getElementById("color-title").innerText = l.color;
-    document.getElementById("acuity-title").innerText = l.acuity;
-    document.getElementById("strain-title").innerText = l.strain;
-    document.getElementById("fix-title").innerText = l.fix;
-    document.getElementById("lbl-astig-prompt").innerText = l.promptA;
-    document.getElementById("lbl-color-prompt").innerText = l.promptC;
-    document.getElementById("btn-acuity-clear").innerText = l.clear;
-    document.getElementById("btn-acuity-blurry").innerText = l.blurry;
-    document.getElementById("btn-astig-yes").innerText = l.uneven;
-    document.getElementById("btn-astig-no").innerText = l.equal;
-    document.getElementById("start-blink-btn").innerText = l.startM;
-    document.getElementById("start-fix-btn").innerText = l.startT;
-
+    document.getElementById("app-title").innerText = l.title; document.getElementById("lbl-name").innerText = l.nameLbl; document.getElementById("patient-name").placeholder = l.namePlc; document.getElementById("lbl-std").innerText = l.std; document.getElementById("lbl-ped").innerText = l.ped; document.getElementById("rep-title").innerText = l.rep; document.getElementById("lbl-patient-id").innerText = l.patId; document.getElementById("btn-color-next").innerText = l.nextP; document.getElementById("color-title").innerText = l.color; document.getElementById("acuity-title").innerText = l.acuity; document.getElementById("strain-title").innerText = l.strain; document.getElementById("fix-title").innerText = l.fix; document.getElementById("lbl-astig-prompt").innerText = l.promptA; document.getElementById("lbl-color-prompt").innerText = l.promptC; document.getElementById("btn-acuity-clear").innerText = l.clear; document.getElementById("btn-acuity-blurry").innerText = l.blurry; document.getElementById("btn-astig-yes").innerText = l.uneven; document.getElementById("btn-astig-no").innerText = l.equal; document.getElementById("start-blink-btn").innerText = l.startM; document.getElementById("start-fix-btn").innerText = l.startT;
     ["pd", "astig", "contrast", "amsler", "periph", "fixation", "retina", "vault"].forEach(id => { document.getElementById(`btn-${id}`).innerText = l[id]; });
     ["pdf", "reset"].forEach(id => { document.getElementById(`btn-${id}`).innerText = l[id]; });
     document.querySelectorAll(".cancel-btn").forEach(el => el.innerText = l.cancel);
-
     if(recognizer) recognizer.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
 };
 
-function getPatientName() {
-    let name = document.getElementById("patient-name").value.trim();
-    return name === "" ? "Guest" : name;
-}
+function getPatientName() { let name = document.getElementById("patient-name").value.trim(); return name === "" ? "Guest" : name; }
 
-// --- Vault Init (Patient-Aware) ---
 let db;
-const request = indexedDB.open("GyanamVault", 1);
-request.onupgradeneeded = (e) => { db = e.target.result; db.createObjectStore("images", { autoIncrement: true }); };
-request.onsuccess = (e) => { db = e.target.result; };
-function saveToVault(dataUrl) { 
-    if(db) { const tx = db.transaction("images", "readwrite"); tx.objectStore("images").add({ patientName: getPatientName(), date: new Date().toLocaleString(), img: dataUrl }); } 
-}
+indexedDB.open("GyanamVault", 1).onupgradeneeded = e => { db = e.target.result; db.createObjectStore("images", { autoIncrement: true }); };
+indexedDB.open("GyanamVault", 1).onsuccess = e => { db = e.target.result; };
+function saveToVault(dataUrl) { if(db) { db.transaction("images", "readwrite").objectStore("images").add({ patientName: getPatientName(), date: new Date().toLocaleString(), img: dataUrl }); } }
 
-// --- FIX 2: Robot Speech Recognition ---
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognizer;
 if (SpeechRecognition) {
@@ -77,29 +46,43 @@ if (SpeechRecognition) {
             else if (tr.includes("blurry") || tr.includes("no") || tr.includes("dhundhla")) failReading();
         }
     };
-    recognizer.onend = () => { if(currentMode === "reading") recognizer.start(); }; // Auto-restart on mobile Chrome
+    recognizer.onend = () => { if(currentMode === "reading") recognizer.start(); };
 }
 
-// --- AI Setup (Mobile Optimized Loop) ---
+// --- FIX: Camera Starts FIRST, AI Loads SECOND ---
+async function startCamera(forceMode = "user") {
+    if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+    try {
+        // Changed constraints to 'ideal' so mobile browsers don't crash
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: forceMode, width: { ideal: 640 }, height: { ideal: 480 } } }); 
+        video.srcObject = stream;
+        ["1", "2", "3"].forEach(id => { const el = document.getElementById(`mini-video-${id}`); if(el) el.srcObject = stream; });
+        return true;
+    } catch(err) {
+        distMsg.innerHTML = "<b style='color:#ef4444'>Camera Permission Denied!</b> Please allow camera access.";
+        return false;
+    }
+}
+
 async function initAI() {
     try {
+        distMsg.innerText = "Opening Camera...";
+        const camStarted = await startCamera();
+        if (!camStarted) return; // Stop if camera fails
+
+        distMsg.innerText = "Downloading AI Models... (Please Wait)";
+        
         const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
         faceLandmarker = await FaceLandmarker.createFromOptions(vision, { baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`, delegate: "GPU" }, runningMode: "VIDEO", numFaces: 1 });
         
         modeText.innerText = "SYSTEM READY"; distMsg.innerText = "Select a test to begin.";
-        await startCamera(); 
         
-        // Ensure loop runs continuously
         video.addEventListener("loadeddata", runAILoop);
-    } catch (e) { distMsg.innerText = "AI failed to load."; console.error(e); }
-}
-
-async function startCamera(forceMode = "user") {
-    if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
-    // Safe mobile constraint
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: forceMode, width: 640, height: 480 } }); 
-    video.srcObject = stream;
-    ["1", "2", "3"].forEach(id => { const el = document.getElementById(`mini-video-${id}`); if(el) el.srcObject = stream; });
+        if(video.readyState >= 2) runAILoop(); 
+    } catch (e) { 
+        distMsg.innerText = "AI Connection Failed. Check Internet."; 
+        console.error(e); 
+    }
 }
 
 window.closeRooms = () => {
@@ -114,14 +97,13 @@ window.measurePD = () => {
     results.pd = `${pdMM} mm`; document.getElementById("pd-display").style.display = "block"; document.getElementById("pd-value").innerText = pdMM; showReport();
 };
 
-let readingLevelPx = 40; const textsAdult = ["Vision is a window.", "The quick brown fox jumps.", "Small text hilft sharpen sharpness."]; const textsKid = ["🍎 🏠 🍎", "⏹ ⏺ ⏹", "🏠 🍎 ⏺"]; const textsHindi = ["दृष्टि दुनिया की खिड़की है।", "स्वास्थ्य ही वास्तविक धन है।", "एआई मोतियाबिंद की जांच करता है।"];
+let readingLevelPx = 40; const textsAdult = ["Vision is a window.", "The quick brown fox jumps.", "Small text helps vision."]; const textsKid = ["🍎 🏠 🍎", "⏹ ⏺ ⏹", "🏠 🍎 ⏺"]; const textsHindi = ["दृष्टि दुनिया की खिड़की है।", "स्वास्थ्य ही वास्तविक धन है।", "एआई मोतियाबिंद की जांच करता है।"];
 window.togglePediatric = () => { isPediatric = document.getElementById("pediatric-toggle").checked; };
 window.openReadingRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("reading-room").style.display = "flex"; currentMode = "reading"; readingLevelPx = (0.5 * screenPPI) / 25.4 * 6; updateReadingUI(); if(recognizer) { recognizer.start(); document.getElementById("voice-status").style.display = "block"; } };
 function updateReadingUI() { const txt = isPediatric ? textsKid : (currentLang === 'hi' ? textsHindi : textsAdult); document.getElementById("room-text").innerText = txt[Math.floor(Math.random() * txt.length)]; document.getElementById("room-text").style.fontSize = readingLevelPx + "px"; }
 window.passReading = () => { readingLevelPx *= 0.75; const targetPx = (0.5 * screenPPI) / 25.4; if (readingLevelPx <= targetPx * 1.2) { results.reading = "Normal Acuity (J1+)"; closeRooms(); showReport(); } else updateReadingUI(); };
 window.failReading = () => { results.reading = `Struggled at current physical scale`; closeRooms(); showReport(); };
 
-// --- FIX 5: Multi-Stage Astigmatism (Canvas Dial) ---
 let astigStage = 1;
 window.openAstigRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("astig-room").style.display = "flex"; currentMode = "astig"; astigStage = 1; results.astig = "Negative"; drawAstigDial(); }; 
 function drawAstigDial() {
@@ -132,28 +114,20 @@ function drawAstigDial() {
     const baseLines = 12; const angleStep = (Math.PI / baseLines);
     for(let i=0; i<baseLines; i++) {
         let rad = i * angleStep;
-        // Introduce artificial thickness variability based on stage to simulate a positive result
         if(astigStage > 1 && i % (6-astigStage) === 0) ctx.lineWidth = 6; else ctx.lineWidth = 3; 
         ctx.beginPath(); ctx.moveTo(cx - radius * Math.cos(rad), cy - radius * Math.sin(rad));
         ctx.lineTo(cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)); ctx.stroke();
     }
 }
-window.submitAstig = (hasUnevenLines) => {
-    if(hasUnevenLines) results.astig = "Positive - Asymmetry Detected";
-    astigStage++;
-    if(astigStage <= 3) drawAstigDial(); else { closeRooms(); showReport(); }
-};
+window.submitAstig = (hasUnevenLines) => { if(hasUnevenLines) results.astig = "Positive - Asymmetry Detected"; astigStage++; if(astigStage <= 3) drawAstigDial(); else { closeRooms(); showReport(); } };
 
-// --- FIX 11: Peripheral ---
 let periphCount = 0, periphHits = 0, flashActive = false;
 window.openPeripheralRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("peripheral-room").style.display = "flex"; currentMode = "peripheral"; document.getElementById("start-periph-btn").style.display = "block"; periphCount = 0; periphHits = 0; };
 window.startPeripheralTest = (e) => {
     e.stopPropagation(); document.getElementById("start-periph-btn").style.display = "none";
-    // Define exact 8 quadrants
     const quadrants = [ {t: '15%', l: '15%'}, {t: '15%', l: '85%'}, {t: '85%', l: '15%'}, {t: '85%', l: '85%'}, {t: '50%', l: '10%'}, {t: '50%', l: '90%'}, {t: '10%', l: '50%'}, {t: '90%', l: '50%'} ];
     function nextFlash() {
         if(periphCount >= quadrants.length) { results.periph = periphHits >= 7 ? "Full Field" : `Deficit Detected (${periphHits}/${quadrants.length} seen)`; closeRooms(); showReport(); return; }
-        // Use random order
         let delay = Math.random() * 1500 + 800;
         setTimeout(() => { const pos = quadrants[periphCount]; const dot = document.getElementById("flash-dot"); dot.style.top = pos.t; dot.style.left = pos.l; dot.style.display = "block"; flashActive = true; setTimeout(() => { dot.style.display = "none"; flashActive = false; periphCount++; nextFlash(); }, 600); }, delay);
     } nextFlash();
@@ -164,44 +138,31 @@ let contrastLvl = 1.0; window.openContrastRoom = () => { document.getElementById
 
 let amslerDefects = 0; window.openAmslerRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("amsler-room").style.display = "flex"; currentMode = "amsler"; amslerDefects = 0; const ctx = document.getElementById("amsler-canvas").getContext("2d"); ctx.clearRect(0,0,300,300); ctx.strokeStyle = "#333"; ctx.lineWidth = 1; for(let i=0; i<=300; i+=15) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 300); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(300, i); ctx.stroke(); } }; window.markAmslerDefect = (e) => { const rect = e.target.getBoundingClientRect(); document.getElementById("amsler-canvas").getContext("2d").fillStyle = "rgba(239, 68, 68, 0.5)"; document.getElementById("amsler-canvas").getContext("2d").beginPath(); document.getElementById("amsler-canvas").getContext("2d").arc(e.clientX - rect.left, e.clientY - rect.top, 15, 0, Math.PI*2); document.getElementById("amsler-canvas").getContext("2d").fill(); amslerDefects++; }; window.submitAmsler = (hasDefects) => { results.amsler = (hasDefects && amslerDefects > 0) ? "Distortion Mapped - Consult Specialist" : "Normal Macula Structure"; closeRooms(); showReport(); };
 
-// --- FIX 6, 8: Blank Space Color Vision & Pre-load images ---
-const colorPlates = [
-    { src: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Ishihara_9.png", ans: 74, opts: [7, 74, 4, 'None'] },
-    { src: "https://upload.wikimedia.org/wikipedia/commons/1/12/Ishihara_11.PNG", ans: 6, opts: [6, 8, 9, 'None'] },
-    { src: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Ishihara_23.PNG", ans: 42, opts: [2, 4, 42, 'None'] }
-];
-// FIX 8: Pre-load to ensure they show on mobile
+const colorPlates = [ { src: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Ishihara_9.png", ans: 74 }, { src: "https://upload.wikimedia.org/wikipedia/commons/1/12/Ishihara_11.PNG", ans: 6 }, { src: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Ishihara_23.PNG", ans: 42 } ];
 colorPlates.forEach(p => { const img = new Image(); img.src = p.src; p.loadedImg = img; });
 
 let currentColorIndex = 0; let colorScore = 0;
-window.openColorRoom = () => { 
-    document.getElementById("dashboard").style.display = "none"; document.getElementById("color-room").style.display = "flex"; currentMode = "color"; 
-    currentColorIndex = 0; colorScore = 0; results.color = "None"; loadColorPlate();
-}; 
+window.openColorRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("color-room").style.display = "flex"; currentMode = "color"; currentColorIndex = 0; colorScore = 0; results.color = "None"; loadColorPlate(); }; 
 function loadColorPlate() {
     if(currentColorIndex >= colorPlates.length) { results.color = colorScore === 3 ? "Normal (Passed)" : "Deficiency Detected"; closeRooms(); showReport(); return; }
     document.getElementById("color-progress").innerText = `Plate ${currentColorIndex + 1} of 3`;
     document.getElementById("plate-img").src = colorPlates[currentColorIndex].src;
-    document.getElementById("color-ans-input").value = ""; document.getElementById("color-ans-input").focus(); // FIX 6: Focus input
+    document.getElementById("color-ans-input").value = ""; document.getElementById("color-ans-input").focus();
 }
 window.submitColorAnswer = (specialAns = null) => {
     let typed = document.getElementById("color-ans-input").value;
-    const realAns = colorPlates[currentColorIndex].ans;
     if(specialAns === 'None') typed = 'None';
-    if(typed.toString() === realAns.toString()) colorScore++;
+    if(typed.toString() === colorPlates[currentColorIndex].ans.toString()) colorScore++;
     currentColorIndex++; loadColorPlate();
 };
 
-// --- FIX 1, 7, 8, 12: AI Logic Loops & Blink Track ---
 let blinkCount = 0, isBlinking = false, blinkInterval; window.openBlinkRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("blink-room").style.display = "flex"; currentMode = "blink"; document.getElementById("start-blink-btn").style.display = "block"; document.getElementById("blink-count-ui").innerText = "0"; }; window.startBlinkTest = () => { blinkCount = 0; let t = 15; document.getElementById("start-blink-btn").style.display = "none"; blinkInterval = setInterval(() => { t--; document.getElementById("blink-timer").innerText = t + "s"; if (t <= 0) { clearInterval(blinkInterval); results.blinks = (blinkCount * 4) < 12 ? `Low Dry Eye Risk` : `Normal`; closeRooms(); showReport(); } }, 1000); };
 
-let fixInterval, fixDeviations = 0; 
-let faceCurrentlyTracked = false; // FIX 12:face track check
-window.openFixationRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("fixation-room").style.display = "flex"; currentMode = "fixation"; faceCurrentlyTracked = false; }; window.startFixationTest = () => { document.getElementById("start-fix-btn").style.display = "none"; fixDeviations = 0; let moves = 0; const dot = document.getElementById("target-dot"); const positions = [{t:'10%',l:'10%'},{t:'10%',l:'80%'},{t:'80%',l:'80%'},{t:'80%',l:'10%'},{t:'50%',l:'50%'}]; fixInterval = setInterval(() => { if(moves >= positions.length) { clearInterval(fixInterval); results.fixation = fixDeviations > 2 ? "Asymmetry Detected (Potential Strabismus)" : "Normal Eye Sync"; closeRooms(); showReport(); return; } if(!faceCurrentlyTracked) fixDeviations++; // FIX 12: Add deviation if face lost dot.style.top = positions[moves].t; dot.style.left = positions[moves].l; moves++; }, 2000); };
+let fixInterval, fixDeviations = 0, faceCurrentlyTracked = false; 
+window.openFixationRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("fixation-room").style.display = "flex"; currentMode = "fixation"; faceCurrentlyTracked = false; }; window.startFixationTest = () => { document.getElementById("start-fix-btn").style.display = "none"; fixDeviations = 0; let moves = 0; const dot = document.getElementById("target-dot"); const positions = [{t:'10%',l:'10%'},{t:'10%',l:'80%'},{t:'80%',l:'80%'},{t:'80%',l:'10%'},{t:'50%',l:'50%'}]; fixInterval = setInterval(() => { if(moves >= positions.length) { clearInterval(fixInterval); results.fixation = fixDeviations > 2 ? "Asymmetry Detected (Potential Strabismus)" : "Normal Eye Sync"; closeRooms(); showReport(); return; } if(!faceCurrentlyTracked) fixDeviations++; dot.style.top = positions[moves].t; dot.style.left = positions[moves].l; moves++; }, 2000); };
 
 window.openVaultRoom = () => { document.getElementById("dashboard").style.display = "none"; document.getElementById("vault-room").style.display = "flex"; currentMode = "vault"; const gallery = document.getElementById("gallery"); gallery.innerHTML = "Loading..."; if(!db) return; db.transaction("images", "readonly").objectStore("images").getAll().onsuccess = (e) => { gallery.innerHTML = e.target.result.length === 0 ? "<p>No images saved.</p>" : e.target.result.map(img => `<div class="vault-img-card"><p style="margin:0 0 5px 0; font-size:12px; color:var(--primary); font-weight:bold;">${img.patientName}</p><p style="margin:0 0 5px 0; font-size:10px;">${img.date}</p><img src="${img.img}"></div>`).reverse().join(""); }; }; window.clearVault = () => { if(confirm("Delete images?")) { db.transaction("images", "readwrite").objectStore("images").clear(); openVaultRoom(); } };
 
-// --- FIX 10: Hugging Face with CORS Hybrid Fallback ---
 window.triggerMacroScan = async () => {
     distMsg.innerHTML = "<b style='color:#f59e0b'>Processing Scan...</b>"; await startCamera("environment");
     setTimeout(async () => {
@@ -215,7 +176,6 @@ window.triggerMacroScan = async () => {
             
             canvas.toBlob(async (blob) => {
                 try {
-                    // FIX 10: Your token below.
                     const token = "hf_YOUR_TOKEN";
                     const response = await fetch("https://api-inference.huggingface.co/models/dima806/cataract_image_detection", { headers: { Authorization: `Bearer ${token}` }, method: "POST", body: blob });
                     const result = await response.json();
@@ -223,7 +183,6 @@ window.triggerMacroScan = async () => {
                     const con = result[0].label === "normal" ? "Healthy Eye" : result[0].label;
                     results.surface = `Cloud AI: ${con.toUpperCase()} (${(result[0].score * 100).toFixed(0)}%)`;
                 } catch (error) {
-                    // FALLBACK: Hybrid algorithmic analysis for pixel brightness if cloud API fails (CORS block)
                     let imgData = ctx.getImageData(0,0, canvas.width, canvas.height).data; let bright = 0; for(let i=0; i<imgData.length; i+=4) bright += imgData[i];
                     results.surface = (bright / (canvas.width * canvas.height)) > 150 ? "Algorithmic Warning: Opacity Detected" : "Algorithmic Scan: Clear";
                 }
@@ -233,20 +192,18 @@ window.triggerMacroScan = async () => {
     }, 2000);
 };
 
-// --- Standard AI Loop Engine (Fixed for mobile) ---
+// Core Engine Loop
 async function runAILoop() {
     if (!faceLandmarker || ["dashboard", "color", "contrast", "amsler", "vault", "astig", "peripheral"].includes(currentMode)) {
-        faceCurrentlyTracked = false; // Reset tracking flag
-        window.requestAnimationFrame(runAILoop); return; 
+        faceCurrentlyTracked = false; window.requestAnimationFrame(runAILoop); return; 
     }
     
-    // Explicit time stamp required by some mobile MediaPipe Web Workers
     let startTimeMs = performance.now();
     const res = await faceLandmarker.detectForVideo(video, startTimeMs);
     
     if (res.faceLandmarks.length > 0) {
         const lm = res.faceLandmarks[0];
-        faceCurrentlyTracked = true; // FIX 12: face detected
+        faceCurrentlyTracked = true; 
 
         currentEyeDistPx = Math.abs(lm[468].x - lm[473].x) * video.videoWidth;
         if (currentMode === "reading") {
@@ -255,20 +212,19 @@ async function runAILoop() {
             document.getElementById("room-dist-msg").innerText = msg; document.getElementById("room-dist-msg").style.color = (msg === "DISTANCE PERFECT") ? "#10b981" : "#ef4444";
         }
         if (currentMode === "blink" && blinkInterval) {
-            const ear = Math.abs(lm[159].y - lm[145].y); // Standard EAR formula approximation
+            const ear = Math.abs(lm[159].y - lm[145].y); 
             if (ear < 0.012 && !isBlinking) { blinkCount++; isBlinking = true; document.getElementById("blink-count-ui").innerText = blinkCount; } 
             else if (ear > 0.015) { isBlinking = false; }
         }
         if (currentMode === "fixation") { const leftGap = Math.abs(lm[468].x - lm[33].x); const rightGap = Math.abs(lm[473].x - lm[263].x); if (Math.abs(leftGap - rightGap) > 0.02) fixDeviations++; }
-    } else { faceCurrentlyTracked = false; // FIX 12: face lost 
-    }
+    } else { faceCurrentlyTracked = false; }
     window.requestAnimationFrame(runAILoop);
 }
 
 window.toggleLowLight = () => { isLowLightBoost = !isLowLightBoost; const btn = document.getElementById("lowlight-btn"); if (isLowLightBoost) { btn.style.background = "#8b5cf6"; video.classList.add("low-light-boost"); } else { btn.style.background = "#4b5563"; video.classList.remove("low-light-boost"); } };
 
 function showReport() { 
-    results.patientId = getPatientName(); // FIX 1: Set result before binding to HTML
+    results.patientId = getPatientName(); 
     document.getElementById("report-overlay").style.display = "block"; 
     document.getElementById("r-name").innerText = results.patientId;
     ["pd", "vision", "astig", "contrast", "color", "periph", "amsler", "blinks", "fixation", "surface"].forEach(id => { document.getElementById(`r-${id}`).innerText = results[id]; }); 
@@ -276,6 +232,6 @@ function showReport() {
 }
 
 window.exportPDF = () => { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFontSize(20); doc.text("Gyanam AI - Clinical Report", 20, 20); doc.setFontSize(12); doc.text(`Date: ${new Date().toLocaleDateString()} | Patient: ${results.patientId}`, 20, 30); doc.line(20, 35, 190, 35); let y = 50; Object.keys(results).forEach(key => { doc.text(`${key.toUpperCase()}: ${results[key]}`, 20, y); y += 10; }); doc.setFontSize(10); doc.setTextColor(150); doc.text("Note: AI screening only.", 20, 160); doc.save(`${results.patientId}_Report.pdf`); };
-window.shareWhatsApp = () => { let msg = `*Gyanam Vision AI - Report*\n_Patient: ${results.patientId}_\n_Date: ${new Date().toLocaleDateString()}_\n\n📏 PD: ${results.pd}\n📖 Acuity: ${results.reading}\n☀️ Astigmatism: ${results.astig}\n🌗 Contrast: ${results.contrast}\n🎨 Color Vision: ${results.color}\n🌌 Peripheral: ${results.periph}\n🕸️ Macular Grid: ${results.amsler}\n🎯 Neurological Alignment: ${results.fixation}\n👁️ Strain (Dry Eye Risk): ${results.blinks}\n📸 AI Pathology Scan: ${results.surface}`; window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); };
+window.shareWhatsApp = () => { let msg = `*Gyanam Vision AI - Report*\n_Patient: ${results.patientId}_\n_Date: ${new Date().toLocaleDateString()}_\n\n📏 PD: ${results.pd}\n📖 Acuity: ${results.reading}\n☀️ Astigmatism: ${results.astig}\n🌗 Contrast: ${results.contrast}\n🎨 Color Vision: ${results.color}\n🌌 Peripheral: ${results.periph}\n🕸️ Macular Grid: ${results.amsler}\n🎯 Neurological Alignment: ${results.fixation}\n👁️ Strain: ${results.blinks}\n📸 AI Pathology Scan: ${results.surface}`; window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); };
 
 initAI();
