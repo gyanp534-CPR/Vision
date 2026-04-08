@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Eye Check</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #121212; color: white; }
+        #container { position: relative; display: inline-block; }
+        video { transform: scaleX(-1); border-radius: 15px; width: 100%; max-width: 500px; }
+        #status { position: absolute; top: 10px; left: 10px; padding: 10px; border-radius: 5px; background: rgba(0,0,0,0.7); }
+        .detected { color: #00ff00; }
+        .not-detected { color: #ff4444; }
+    </style>
+</head>
+<body>
+    <h1>AI Vision Screening</h1>
+    <div id="container">
+        <video id="webcam" autoplay playsinline></video>
+        <div id="status">Initializing AI...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs" type="module"></script>
+    <script src="app.js" type="module"></script>
+</body>
+</html>
