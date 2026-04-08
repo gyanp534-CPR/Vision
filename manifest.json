@@ -1,0 +1,11 @@
+{
+  "name": "AI Vision Check",
+  "short_name": "VisionAI",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#121212",
+  "description": "AI-powered eye screening PWA",
+  "icons": [
+    { "src": "https://cdn-icons-png.flaticon.com/512/822/822102.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
