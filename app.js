@@ -74,19 +74,30 @@ async function runAILoop() {
 }
 
 // Reading Logic
+const readingSamples = [
+    "Vision is a window to the world around us.",
+    "Health is wealth, especially for your eyes.",
+    "The quick brown fox jumps over the lazy dog.",
+    "Small text requires sharp focus and good light.",
+    "Artificial Intelligence helps in early screening.",
+    "Always consult a doctor for a final diagnosis."
+];
+
 window.passReading = () => {
     readingLevel -= 3;
     if (readingLevel < 6) {
         results.reading = "Normal (J1+)";
         showFinalReport();
     } else {
-        document.getElementById("sample-text").style.fontSize = readingLevel + "px";
+        // Change the text and the size
+        const randomText = readingSamples[Math.floor(Math.random() * readingSamples.length)];
+        const textElement = document.getElementById("sample-text");
+        
+        textElement.innerText = randomText;
+        textElement.style.fontSize = readingLevel + "px";
     }
 };
-window.failReading = () => {
-    results.reading = "Struggled at " + readingLevel + "px font";
-    showFinalReport();
-};
+
 
 // Back Camera Macro Logic
 async function performMacroScan() {
