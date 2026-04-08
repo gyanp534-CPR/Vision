@@ -9,14 +9,13 @@ const letterDisplay = document.getElementById("snellen-letter");
 const reportCard = document.getElementById("report-card");
 
 let faceLandmarker;
-let currentFacingMode = "user"; // "user" = Front, "environment" = Back
+let currentFacingMode = "user"; 
 let currentSize = 120;
 let level = 0;
-let finalVision = "Not Tested";
+let finalVision = "Not Measured";
 let finalSurface = "Not Analyzed";
 
 async function initAI() {
-    statusDiv.innerHTML = "Loading AI Models...";
     const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
     faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
         baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`, delegate: "GPU" },
@@ -26,29 +25,32 @@ async function initAI() {
 }
 
 async function startVideo() {
-    if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-    }
-
-    // Mirroring fix: Back camera should NOT be mirrored
+    if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
     video.style.transform = currentFacingMode === "user" ? "scaleX(-1)" : "scaleX(1)";
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: currentFacingMode, width: 720, height: 720 } 
+            video: { facingMode: currentFacingMode, width: { ideal: 1080 }, height: { ideal: 1080 } } 
         });
         video.srcObject = stream;
         video.onloadeddata = () => predictWebcam();
     } catch (err) {
-        statusDiv.innerHTML = "Error: Camera not found or permission denied.";
+        statusDiv.innerHTML = "Camera Error. Check permissions.";
     }
 }
 
 window.switchCamera = () => {
     currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-    statusDiv.innerHTML = "Switching camera...";
     startVideo();
 };
+
+async function toggleTorch(on) {
+    const track = video.srcObject.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+    if (capabilities.torch) {
+        try { await track.applyConstraints({ advanced: [{ torch: on }] }); } catch (e) { console.error(e); }
+    }
+}
 
 async function predictWebcam() {
     if (!faceLandmarker) return;
@@ -56,80 +58,71 @@ async function predictWebcam() {
 
     if (results.faceLandmarks.length > 0) {
         const landmarks = results.faceLandmarks[0];
-        // Calculate Distance
         const eyeDist = Math.sqrt(Math.pow(landmarks[33].x - landmarks[263].x, 2) + Math.pow(landmarks[33].y - landmarks[263].y, 2));
 
-        if (eyeDist > 0.45) {
-            statusDiv.innerHTML = "<span style='color:#28a745'>PERFECT: Hold still for Surface Scan</span>";
+        if (eyeDist > 0.48) {
+            statusDiv.innerHTML = "<span style='color:#4ade80'>READY FOR MACRO SCAN<br>Flash will trigger automatically</span>";
             scanBtn.style.display = "block";
             startBtn.style.display = "none";
         } else if (eyeDist > 0.18 && eyeDist < 0.30) {
-            statusDiv.innerHTML = "<span style='color:#0078d4'>Ready for Vision Test</span>";
+            statusDiv.innerHTML = "<span style='color:#38bdf8'>Vision Test Distance OK</span>";
             startBtn.style.display = "block";
             scanBtn.style.display = "none";
         } else {
-            statusDiv.innerHTML = eyeDist < 0.18 ? "Move closer to screen" : "Move further away";
-            startBtn.style.display = "none";
-            scanBtn.style.display = "none";
+            statusDiv.innerHTML = eyeDist < 0.18 ? "Move phone closer" : "Move phone back";
+            startBtn.style.display = "none"; scanBtn.style.display = "none";
         }
     } else {
-        statusDiv.innerHTML = "Looking for your eyes...";
+        statusDiv.innerHTML = "Align your eye in the circle...";
     }
     window.requestAnimationFrame(predictWebcam);
 }
 
-// --- Test & Analysis Logic ---
-window.startTest = () => {
-    chartContainer.style.display = "block";
-    reportCard.style.display = "none";
-    updateLetter();
-};
-
-window.nextLevel = () => {
-    level++;
-    currentSize *= 0.75;
-    updateLetter();
-};
-
-window.failLevel = () => {
-    finalVision = `20/${20 + (level * 10)}`;
-    chartContainer.style.display = "none";
-    showReport();
-};
+// --- Vision Test Logic ---
+window.startTest = () => { chartContainer.style.display = "block"; reportCard.style.display = "none"; updateLetter(); };
+window.nextLevel = () => { level++; currentSize *= 0.7; updateLetter(); };
+window.failLevel = () => { finalVision = `20/${20 + (level * 10)}`; chartContainer.style.display = "none"; showReport(); };
 
 function updateLetter() {
-    const letters = ["E", "F", "P", "T", "O", "L", "D"];
-    letterDisplay.innerText = letters[Math.floor(Math.random() * letters.length)];
+    const alphabet = "EFPTOZLD";
+    letterDisplay.innerText = alphabet[Math.floor(Math.random() * alphabet.length)];
     letterDisplay.style.fontSize = `${currentSize}px`;
 }
 
-window.performEyeAnalysis = () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
+// --- Phase 5 Macro Analysis ---
+window.performEyeAnalysis = async () => {
+    statusDiv.innerHTML = "ACTIVATE FLASH...";
+    if (currentFacingMode === "environment") await toggleTorch(true);
 
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let r = 0, g = 0, b = 0;
-    for (let i = 0; i < data.length; i += 4) {
-        r += data[i]; g += data[i+1]; b += data[i+2];
-    }
-    const avgR = r / (data.length / 4);
-    const avgG = g / (data.length / 4);
+    // Wait for exposure to adjust
+    setTimeout(async () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
 
-    if (avgR > avgG + 35) finalSurface = "High Redness Detected";
-    else if (avgR > 180 && avgG > 180) finalSurface = "Potential Cloudiness/Yellowing";
-    else finalSurface = "Appearance Normal";
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let r = 0, g = 0, b = 0;
+        for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i+1]; b += data[i+2]; }
+        const avgR = r / (data.length / 4);
+        const avgG = g / (data.length / 4);
 
-    showReport();
+        if (currentFacingMode === "environment") await toggleTorch(false);
+
+        // Analysis Logic
+        if (avgR > avgG + 45) finalSurface = "Strong Red Reflex / Irritation";
+        else if (avgR > 190 && avgG > 190) finalSurface = "Lens Opacity Detected (Clouding)";
+        else finalSurface = "Surface looks Healthy";
+
+        showReport();
+    }, 400); 
 };
 
 function showReport() {
     reportCard.style.display = "block";
-    document.getElementById("report-date").innerText = new Date().toLocaleDateString();
-    document.getElementById("report-cam").innerText = currentFacingMode === "user" ? "Front (Selfie)" : "Back (Macro)";
-    document.getElementById("report-vision").innerText = finalVision;
-    document.getElementById("report-surface").innerText = finalSurface;
+    document.getElementById("r-date").innerText = new Date().toLocaleDateString();
+    document.getElementById("r-vision").innerText = finalVision;
+    document.getElementById("r-surface").innerText = finalSurface;
     window.scrollTo(0, document.body.scrollHeight);
 }
 
