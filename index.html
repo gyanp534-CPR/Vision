@@ -3,61 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gyanam Vision Pro v6</title>
+    <title>Gyanam Vision Pro AI</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0f172a; color: white; margin: 0; }
+        :root { --primary: #0284c7; --bg: #0f172a; --card: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: var(--bg); color: white; margin: 0; padding-bottom: 50px; }
         #app-container { display: flex; flex-direction: column; align-items: center; padding: 20px; max-width: 500px; margin: auto; }
-        #video-container { position: relative; width: 280px; height: 280px; border-radius: 50%; overflow: hidden; border: 4px solid #38bdf8; background: #000; margin-bottom: 10px; }
+        
+        #status-bar { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; width: 100%; border: 1px solid #334155; }
+        #video-container { position: relative; width: 280px; height: 280px; border-radius: 50%; overflow: hidden; border: 4px solid var(--primary); background: #000; margin: 10px 0; }
         video { width: 100%; height: 100%; object-fit: cover; }
         
-        #status-bar { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; width: 100%; font-size: 14px; }
-        .mode-indicator { font-size: 12px; text-transform: uppercase; color: #38bdf8; letter-spacing: 1px; }
+        #quality-bg { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 8px; display: none; }
+        #quality-bar { width: 0%; height: 100%; background: #16a34a; transition: 0.3s; }
 
-        #reading-area { display: none; background: white; color: #1e293b; padding: 20px; border-radius: 12px; width: 90%; text-align: left; }
-        .reading-text { font-size: 10px; line-height: 1.4; transition: 0.2s; }
+        #controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-scan { background: #16a34a; }
         
-        #controls { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
-        button { background: #0284c7; color: white; border: none; padding: 12px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .btn-green { background: #16a34a; }
-        .btn-red { background: #be123c; }
-
-        #report-card { display: none; background: white; color: #1e293b; padding: 20px; border-radius: 12px; width: 90%; margin-top: 20px; text-align: left; border-top: 8px solid #0284c7; }
+        .overlay-card { display: none; background: white; color: #1e293b; padding: 20px; border-radius: 15px; width: 90%; margin-top: 20px; text-align: left; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        .reading-txt { font-size: 14px; margin: 15px 0; line-height: 1.5; border: 1px solid #eee; padding: 10px; border-radius: 5px; }
+        
+        #history-list { margin-top: 20px; width: 90%; text-align: left; }
+        .hist-item { background: var(--card); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--primary); font-size: 13px; }
     </style>
 </head>
 <body>
     <div id="app-container">
         <div id="status-bar">
-            <div class="mode-indicator" id="current-mode">System Initializing...</div>
-            <div id="dist-feedback">Please wait...</div>
+            <div id="mode-text" style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:5px;">INITIALIZING...</div>
+            <div id="dist-msg">Please wait for AI to load...</div>
+            <div id="quality-bg"><div id="quality-bar"></div></div>
         </div>
 
-        <div id="video-container">
-            <video id="webcam" autoplay playsinline></video>
-        </div>
+        <div id="video-container"><video id="webcam" autoplay playsinline></video></div>
 
         <div id="controls">
             <button onclick="setMode('reading')">📖 Reading Test (Front)</button>
-            <button onclick="setMode('scan')" class="btn-green">📸 Eye Scan (Back)</button>
+            <button onclick="setMode('scan')" class="btn-scan">📸 Retina Scan (Back)</button>
         </div>
 
-        <div id="reading-area">
-            <h4 style="margin-top:0">Reading Test</h4>
-            <p id="sample-text" class="reading-text">
-                Vision is a precious gift. This test measures your ability to read small text at a close distance. 
-                Keep the phone at a comfortable distance and confirm if you can read this paragraph clearly.
-            </p>
+        <div id="reading-area" class="overlay-card">
+            <h3 style="margin:0">Reading Test</h3>
+            <p id="sample-text" class="reading-txt">Can you read this text clearly? We will shrink it to test your near vision.</p>
             <div style="display:flex; gap:10px;">
-                <button onclick="passReading()" style="flex:1">I can read this</button>
-                <button onclick="failReading()" class="btn-red" style="flex:1">Too blurry</button>
+                <button onclick="passReading()" style="flex:1">Yes, Clear</button>
+                <button onclick="failReading()" style="flex:1; background:#be123c;">Blurry</button>
             </div>
         </div>
 
-        <div id="report-card">
-            <h3 style="margin-top:0">Final Vision Report</h3>
+        <div id="report-card" class="overlay-card">
+            <h3 style="margin:0; color:var(--primary);">Test Results</h3>
             <p><strong>Date:</strong> <span id="r-date"></span></p>
-            <p><strong>Reading Ability:</strong> <b id="r-reading">N/A</b></p>
-            <p><strong>Retina/Surface:</strong> <b id="r-surface">N/A</b></p>
-            <button onclick="location.reload()" style="width:100%; background:#1e293b; margin-top:10px;">Restart App</button>
+            <p><strong>Reading:</strong> <b id="r-vision"></b></p>
+            <p><strong>Scan:</strong> <b id="r-surface"></b></p>
+            <button onclick="location.reload()" style="width:100%; background:#334155;">New Test</button>
+        </div>
+
+        <div id="history-list">
+            <h4 style="color:var(--primary); border-bottom: 1px solid #334155; padding-bottom:5px;">Recent History</h4>
+            <div id="hist-items"></div>
         </div>
     </div>
 
