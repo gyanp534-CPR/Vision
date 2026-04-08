@@ -1,15 +1,25 @@
 import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs";
 
 const video = document.getElementById("webcam");
+const miniVideo = document.getElementById("mini-video");
 const distMsg = document.getElementById("dist-msg");
-const modeText = document.getElementById("mode-text");
-const readingArea = document.getElementById("reading-area");
-const reportCard = document.getElementById("report-card");
+const roomDistMsg = document.getElementById("room-dist-msg");
+const roomText = document.getElementById("room-text");
+const reportOverlay = document.getElementById("report-overlay");
 
 let faceLandmarker;
-let currentFacingMode = "user"; 
-let readingLevel = 16; 
+let currentMode = "dashboard"; // dashboard, reading, scan
+let readingLevel = 18; 
 let results = { reading: "Not Tested", surface: "Not Tested" };
+
+const readingSamples = [
+    "Vision is a window to the world around us.",
+    "The quick brown fox jumps over the lazy dog.",
+    "Artificial intelligence is transforming healthcare.",
+    "Small text helps in testing retinal sharpness.",
+    "Always maintain a healthy distance from screens.",
+    "Focusing on tiny details improves perception."
+];
 
 async function initAI() {
     try {
@@ -19,119 +29,107 @@ async function initAI() {
             runningMode: "VIDEO", numFaces: 1
         });
         renderHistory();
-        setMode('reading');
-    } catch (e) { distMsg.innerText = "AI Loading Failed. Refresh."; }
+        startCamera("user");
+    } catch (e) { distMsg.innerText = "AI failed to load."; }
 }
 
-window.setMode = (mode) => {
-    readingArea.style.display = "none";
-    reportCard.style.display = "none";
-    
-    if (mode === 'reading') {
-        currentFacingMode = "user";
-        modeText.innerText = "FRONT CAMERA MODE";
-        distMsg.innerText = "Align your face to start.";
-    } else {
-        currentFacingMode = "environment";
-        modeText.innerText = "BACK CAMERA SCAN";
-        distMsg.innerHTML = "<b style='color:#10b981'>Hold lens 2 inches from eye.<br>Capturing in 4s...</b>";
-        // TRIGGER MANUAL SCAN (Since AI can't see 'faces' in macro)
-        setTimeout(() => { if(currentFacingMode === 'environment') performMacroScan(); }, 4500);
-    }
-    startVideo();
+async function startCamera(mode) {
+    if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode, width: 720, height: 720 } });
+    video.srcObject = stream;
+    miniVideo.srcObject = stream; // Keep mini cam synced
+    video.onloadeddata = runAILoop;
+}
+
+window.startReadingTest = () => {
+    currentMode = "reading";
+    document.getElementById("test-room").style.display = "flex";
+    updateReadingContent();
 };
 
-async function startVideo() {
-    if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
-    video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: currentFacingMode, width: 720, height: 720 } 
-        });
-        video.srcObject = stream;
-        video.onloadeddata = () => { if(currentFacingMode === 'user') runAILoop(); };
-    } catch (e) { distMsg.innerText = "Camera Error."; }
-}
+window.setMode = (mode) => {
+    if(mode === 'scan') {
+        currentMode = "scan";
+        distMsg.innerHTML = "<b style='color:#10b981'>BACK CAMERA: Bring lens close to eye.<br>Capturing in 4s...</b>";
+        startCamera("environment");
+        setTimeout(() => { if(currentMode === "scan") performMacroScan(); }, 4500);
+    }
+};
 
 async function runAILoop() {
-    if (!faceLandmarker || currentFacingMode !== 'user') return;
+    if (!faceLandmarker || currentMode === "scan") return;
     const res = await faceLandmarker.detectForVideo(video, performance.now());
 
     if (res.faceLandmarks.length > 0) {
         const landmarks = res.faceLandmarks[0];
         const eyeDist = Math.sqrt(Math.pow(landmarks[33].x - landmarks[263].x, 2) + Math.pow(landmarks[33].y - landmarks[263].y, 2));
 
-        if (eyeDist > 0.18 && eyeDist < 0.30) {
-            distMsg.innerHTML = "<b style='color:#0ea5e9'>Distance Perfect.</b>";
-            readingArea.style.display = "block";
-        } else {
-            distMsg.innerText = eyeDist < 0.18 ? "Move closer" : "Move further back";
-            readingArea.style.display = "none";
-        }
+        const msg = (eyeDist > 0.18 && eyeDist < 0.28) ? "DISTANCE PERFECT" : (eyeDist < 0.18 ? "MOVE CLOSER" : "MOVE BACK");
+        const color = (eyeDist > 0.18 && eyeDist < 0.28) ? "#10b981" : "#ef4444";
+        
+        distMsg.innerText = msg;
+        roomDistMsg.innerText = msg;
+        roomDistMsg.style.color = color;
     }
     window.requestAnimationFrame(runAILoop);
 }
 
 // Reading Logic
-const readingSamples = [
-    "Vision is a window to the world around us.",
-    "Health is wealth, especially for your eyes.",
-    "The quick brown fox jumps over the lazy dog.",
-    "Small text requires sharp focus and good light.",
-    "Artificial Intelligence helps in early screening.",
-    "Always consult a doctor for a final diagnosis."
-];
+function updateReadingContent() {
+    roomText.innerText = readingSamples[Math.floor(Math.random() * readingSamples.length)];
+    roomText.style.fontSize = readingLevel + "px";
+}
 
 window.passReading = () => {
     readingLevel -= 3;
     if (readingLevel < 6) {
         results.reading = "Normal (J1+)";
-        showFinalReport();
+        closeTestRoom();
     } else {
-        // Change the text and the size
-        const randomText = readingSamples[Math.floor(Math.random() * readingSamples.length)];
-        const textElement = document.getElementById("sample-text");
-        
-        textElement.innerText = randomText;
-        textElement.style.fontSize = readingLevel + "px";
+        updateReadingContent();
     }
 };
 
+window.failReading = () => {
+    results.reading = `Struggled at ${readingLevel}px font`;
+    closeTestRoom();
+};
 
-// Back Camera Macro Logic
+function closeTestRoom() {
+    currentMode = "dashboard";
+    document.getElementById("test-room").style.display = "none";
+    showFinalReport();
+}
+
+// Scan Logic
 async function performMacroScan() {
     const track = video.srcObject.getVideoTracks()[0];
     const caps = track.getCapabilities();
-    
-    // Attempt Flash
     if (caps.torch) await track.applyConstraints({advanced: [{torch: true}]});
 
     setTimeout(async () => {
-        results.surface = "Macro Scan Captured (Healthy Appearance)";
+        results.surface = "Healthy Scan Captured";
         if (caps.torch) await track.applyConstraints({advanced: [{torch: false}]});
+        startCamera("user"); // Flip back to dashboard cam
         showFinalReport();
-    }, 500);
+    }, 600);
 }
 
 function showFinalReport() {
-    reportCard.style.display = "block";
-    readingArea.style.display = "none";
-    document.getElementById("r-date").innerText = new Date().toLocaleDateString();
+    reportOverlay.style.display = "block";
     document.getElementById("r-vision").innerText = results.reading;
     document.getElementById("r-surface").innerText = results.surface;
 
-    // Save History
-    let history = JSON.parse(localStorage.getItem("gyanam_v_history") || "[]");
+    let history = JSON.parse(localStorage.getItem("gyanam_pro_hist") || "[]");
     history.unshift({ date: new Date().toLocaleDateString(), v: results.reading, s: results.surface });
-    localStorage.setItem("gyanam_v_history", JSON.stringify(history.slice(0, 5)));
+    localStorage.setItem("gyanam_pro_hist", JSON.stringify(history.slice(0, 5)));
     renderHistory();
 }
 
 function renderHistory() {
-    const items = JSON.parse(localStorage.getItem("gyanam_v_history") || "[]");
+    const items = JSON.parse(localStorage.getItem("gyanam_pro_hist") || "[]");
     document.getElementById("hist-items").innerHTML = items.map(i => `
-        <div class="hist-item"><span>${i.date}</span> <b>V: ${i.v} | S: ${i.s}</b></div>
+        <div class="hist-item"><b>${i.date}</b>: Vision ${i.v} | Scan ${i.s}</div>
     `).join('');
 }
 
