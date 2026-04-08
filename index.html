@@ -3,64 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gyanam Vision AI Pro</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Gyanam Vision AI Pro v5</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #121212; color: white; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #0f172a; color: white; margin: 0; }
         #app-container { display: flex; flex-direction: column; align-items: center; padding: 20px; max-width: 500px; margin: auto; }
-        #video-container { position: relative; width: 320px; height: 320px; border-radius: 50%; overflow: hidden; border: 4px solid #0078d4; box-shadow: 0 0 20px rgba(0,120,212,0.5); background: #000; }
-        
-        /* Default is mirrored for Selfie */
-        video { transform: scaleX(-1); width: 100%; height: 100%; object-fit: cover; }
-        
-        #status { margin-top: 15px; font-weight: bold; font-size: 16px; min-height: 40px; color: #aaa; padding: 0 10px; }
-        
-        #controls { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        button { background: #0078d4; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
-        .secondary-btn { background: #444; }
-        .scan-btn { background: #28a745; display: none; }
-
-        #chart-container { margin-top: 20px; background: white; color: black; padding: 25px; border-radius: 15px; width: 90%; display: none; }
-        .snellen-letter { font-family: serif; font-weight: bold; line-height: 1; display: block; margin-bottom: 10px; }
-
-        #report-card { display: none; background: white; color: #333; padding: 20px; border-radius: 12px; width: 90%; margin-top: 20px; text-align: left; border-top: 8px solid #0078d4; }
-        .report-line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 8px 0; }
+        #video-container { position: relative; width: 300px; height: 300px; border-radius: 50%; overflow: hidden; border: 4px solid #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); background: #000; margin-bottom: 10px; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        #status { margin: 15px 0; font-weight: 600; font-size: 15px; color: #94a3b8; min-height: 45px; }
+        #controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        button { background: #0284c7; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        button:disabled { background: #334155; cursor: not-allowed; }
+        .btn-secondary { background: #334155; }
+        .btn-success { background: #16a34a; display: none; }
+        #chart-container { margin-top: 20px; background: white; color: #1e293b; padding: 25px; border-radius: 16px; width: 90%; display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .snellen-letter { font-family: 'Times New Roman', serif; font-weight: bold; line-height: 1; display: block; }
+        #report-card { display: none; background: white; color: #1e293b; padding: 20px; border-radius: 16px; width: 90%; margin-top: 20px; text-align: left; border-top: 8px solid #0284c7; }
+        .report-line { display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding: 10px 0; }
     </style>
 </head>
 <body>
     <div id="app-container">
-        <h2 style="margin-bottom: 5px;">Gyanam Vision AI</h2>
+        <h2 style="color: #38bdf8; margin-bottom: 5px;">Vision AI <small>v5.0</small></h2>
         <div id="video-container">
             <video id="webcam" autoplay playsinline></video>
         </div>
-        <div id="status">Starting camera...</div>
+        <div id="status">Warming up AI...</div>
 
         <div id="controls">
-            <button id="switch-btn" class="secondary-btn" onclick="switchCamera()">🔄 Switch Camera</button>
-            <button id="start-btn" style="display:none;" onclick="startTest()">Start Vision Test</button>
-            <button id="scan-btn" class="scan-btn" onclick="performEyeAnalysis()">Analyze Eye Surface</button>
+            <button class="btn-secondary" onclick="switchCamera()">🔄 Flip Camera</button>
+            <button id="start-btn" style="display:none;" onclick="startTest()">Vision Test</button>
+            <button id="scan-btn" class="btn-success" onclick="performEyeAnalysis()">Flash Scan</button>
         </div>
 
         <div id="chart-container">
             <div id="snellen-letter" class="snellen-letter">E</div>
-            <p id="result-text" style="color: #444;">Can you see this clearly?</p>
+            <p id="result-text">Can you see this clearly?</p>
             <div id="test-controls">
                 <button onclick="nextLevel()">Yes</button>
-                <button onclick="failLevel()" style="background: #d11;">No/Blurry</button>
+                <button onclick="failLevel()" style="background: #be123c;">No</button>
             </div>
         </div>
 
         <div id="report-card">
-            <h3>Diagnostic Report</h3>
-            <div class="report-line"><span>Date:</span> <b id="report-date"></b></div>
-            <div class="report-line"><span>Camera Used:</span> <b id="report-cam">Front</b></div>
-            <div class="report-line"><span>Vision Score:</span> <b id="report-vision">N/A</b></div>
-            <div class="report-line"><span>Surface:</span> <b id="report-surface">N/A</b></div>
-            <button onclick="location.reload()" style="width: 100%; background: #333; margin-top: 15px;">New Screening</button>
+            <h3 style="margin-top:0; color:#0284c7;">Screening Results</h3>
+            <div class="report-line"><span>Date:</span> <b id="r-date"></b></div>
+            <div class="report-line"><span>Acuity:</span> <b id="r-vision">N/A</b></div>
+            <div class="report-line"><span>Reflex/Surface:</span> <b id="r-surface">N/A</b></div>
+            <button onclick="location.reload()" style="width:100%; margin-top:15px; background:#1e293b;">New Scan</button>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs" type="module"></script>
     <script src="app.js" type="module"></script>
 </body>
