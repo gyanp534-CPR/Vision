@@ -5,82 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gyanam Vision Pro AI</title>
     
-        <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
     <div id="dashboard">
         <div id="status-bar">
-            <div id="mode-text" style="font-size:11px; color:var(--primary); font-weight:bold; letter-spacing: 1px;">SYSTEM READY</div>
-            <div id="dist-msg" style="font-size: 15px; margin-top: 5px;">Choose a test mode to begin.</div>
+            <div id="mode-text" style="font-size:11px; color:var(--primary); font-weight:bold;">SYSTEM READY</div>
+            <div id="dist-msg" style="font-size: 14px; margin-top: 5px;">Select a test to begin screening.</div>
         </div>
 
         <div id="video-container">
             <video id="webcam" autoplay playsinline></video>
         </div>
-            <button onclick="toggleLowLight()" id="lowlight-btn" style="background: #4b5563;">🌙 Night Mode: OFF</button>
 
-        <div id="controls">
-            <button onclick="startReadingTest()">📖 Reading Test</button>
-<button onclick="openColorRoom()" style="background: #f59e0b;">🎨 Color Test</button>
-
-            <button onclick="setMode('scan')" class="btn-scan">📸 Retina Scan</button>
+        <div class="controls-grid">
+            <button onclick="toggleLowLight()" id="lowlight-btn" class="btn-full btn-night">🌙 Night Mode: OFF</button>
+            <button onclick="openReadingRoom()">📖 Acuity Test</button>
+            <button onclick="openColorRoom()" style="background: #f59e0b;">🎨 Color Test</button>
+            <button onclick="openBlinkRoom()" style="background: #8b5cf6;">👁️ Eye Strain (Blinks)</button>
+            <button onclick="triggerMacroScan()" class="btn-scan">📸 Retina & Reflex</button>
         </div>
 
         <div id="report-overlay">
-            <h3 style="margin:0; color:var(--primary);">Final Report</h3>
+            <h3 style="margin:0; color:var(--primary);">Clinical Report</h3>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
             <p><strong>Acuity:</strong> <span id="r-vision">--</span></p>
-            <p><strong>Scan:</strong> <span id="r-surface">--</span></p>
-            <button onclick="location.reload()" style="width:100%; background:#334155; color:white; padding:12px; border:none; border-radius:10px; margin-top:10px;">New Session</button>
-        </div>
-
-        <div id="history-list">
-            <h4 style="color:var(--primary); margin-bottom: 10px;">Recent Activity</h4>
-            <div id="hist-items"></div>
+            <p><strong>Color:</strong> <span id="r-color">--</span></p>
+            <p><strong>Eye Strain:</strong> <span id="r-blinks">--</span></p>
+            <p><strong>Surface:</strong> <span id="r-surface">--</span></p>
+            <p><strong>Pupil Reflex:</strong> <span id="r-reflex">--</span></p>
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="exportPDF()" style="flex:1; background:#ef4444;">📄 Save PDF</button>
+                <button onclick="location.reload()" style="flex:1; background:#334155;">Reset</button>
+            </div>
         </div>
     </div>
 
-    <div id="test-room">
-        <div id="mini-cam-container">
-            <video id="mini-video" autoplay playsinline></video>
-        </div>
+    <div id="reading-room" class="fullscreen-room">
+        <div class="mini-cam"><video id="mini-video-1" autoplay playsinline></video></div>
+        <h2 style="margin:0;">Near Vision</h2>
+        <p id="room-dist-msg" style="color: #64748b; font-weight: 600;">Aligning...</p>
         
-        <div id="room-header" style="text-align:center;">
-            <p id="room-dist-msg" style="color: #64748b; font-weight: 600;">Aligning...</p>
-            <h2 style="margin: 5px 0;">Reading Test</h2>
+        <div class="test-box">
+            <span id="room-text" style="font-size: 18px; font-family: serif;">Loading...</span>
         </div>
 
-        <div id="sample-box">
-            <span id="room-text">Initializing text...</span>
+        <div style="display:flex; gap:10px; width:100%; max-width:400px;">
+            <button onclick="passReading()" style="flex:2; background:var(--success);">I Can Read This</button>
+            <button onclick="failReading()" style="flex:1; background:var(--danger);">Blurry</button>
         </div>
+        <button onclick="closeRooms()" style="margin-top:20px; background:#cbd5e1; color:#333; width:100%; max-width:400px;">Cancel Test</button>
+    </div>
 
-        <div class="room-controls">
-            <button class="btn-room-pass" onclick="passReading()">I Can Read This Clearly</button>
-            <button class="btn-room-fail" onclick="failReading()">Too Blurry</button>
-        </div>
-<div id="color-room">
-    <h3 style="margin:0; color:#0ea5e9;">Color Vision Test</h3>
-    <p style="font-size:14px; color:#64748b;">What number do you see in the circle?</p>
-    
-    <div id="plate-container">
+    <div id="color-room" class="fullscreen-room">
+        <h2 style="margin:0;">Color Vision</h2>
+        <p style="color: #64748b;">What number do you see?</p>
+        
         <img id="plate-img" src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Ishihara_9.png" alt="Color Plate">
+
+        <div class="keypad">
+            <button class="key-btn" onclick="checkColor(7)">7</button>
+            <button class="key-btn" onclick="checkColor(9)">9</button>
+            <button class="key-btn" onclick="checkColor(12)">12</button>
+            <button class="key-btn" onclick="checkColor(8)">8</button>
+            <button class="key-btn" onclick="checkColor(5)">5</button>
+            <button class="key-btn" onclick="checkColor(0)">None</button>
+        </div>
+        <button onclick="closeRooms()" style="margin-top:20px; background:#cbd5e1; color:#333; width:100%; max-width:300px;">Cancel Test</button>
     </div>
 
-    <div class="keypad">
-        <button class="key-btn" onclick="checkColor(7)">7</button>
-        <button class="key-btn" onclick="checkColor(9)">9</button>
-        <button class="key-btn" onclick="checkColor(12)">12</button>
-        <button class="key-btn" onclick="checkColor(8)">8</button>
-        <button class="key-btn" onclick="checkColor(5)">5</button>
-        <button class="key-btn" onclick="checkColor(0)">None</button>
-    </div>
-    
-    <button onclick="closeColorRoom()" style="margin-top:20px; background:#64748b; width:100%; max-width:300px;">Exit Test</button>
-</div>
+    <div id="blink-room" class="fullscreen-room">
+        <div class="mini-cam"><video id="mini-video-2" autoplay playsinline></video></div>
+        <h2 style="margin:0;">Eye Strain Monitor</h2>
+        <p style="color: #64748b;">Read the text below naturally. We are tracking your blink rate.</p>
+        
+        <div class="test-box" style="text-align:left; font-size:14px; line-height:1.6; height:150px; overflow-y:auto;">
+            Artificial intelligence in healthcare is revolutionizing how we screen for early signs of visual impairment. By analyzing micro-movements, distance, and pupillary reflexes, mobile devices can now assist in rural clinics where specialists are scarce. Keep reading to allow the AI to monitor your natural eye movements.
+        </div>
 
-
+        <h1 id="blink-timer" style="color:var(--primary); font-size:40px; margin:0;">15s</h1>
+        <p>Blinks Detected: <b id="blink-count-ui">0</b></p>
+        
+        <button onclick="startBlinkTest()" id="start-blink-btn" style="width:100%; max-width:400px; margin-top:10px;">Start Monitor</button>
+        <button onclick="closeRooms()" style="margin-top:10px; background:#cbd5e1; color:#333; width:100%; max-width:400px;">Cancel</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs" type="module"></script>
