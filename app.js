@@ -186,27 +186,64 @@ window.openVaultRoom = () => { document.getElementById("dashboard").style.displa
 window.clearVault = () => { if(confirm("Delete images?")) { db.transaction("images", "readwrite").objectStore("images").clear(); openVaultRoom(); } };
 
 // --- Custom AI Teachable Machine Scan ---
+// --- Cloud AI Cataract Scan (Hugging Face) ---
 window.triggerMacroScan = async () => {
-    distMsg.innerHTML = "<b style='color:#f59e0b'>Running Neural Scan...</b>"; await startCamera("environment");
+    distMsg.innerHTML = "<b style='color:#f59e0b'>Uploading to Cloud AI...</b>"; 
+    await startCamera("environment");
+    
     setTimeout(async () => {
-        const track = video.srcObject.getVideoTracks()[0]; const caps = track.getCapabilities();
+        const track = video.srcObject.getVideoTracks()[0]; 
+        const caps = track.getCapabilities();
         if (caps.torch) try { await track.applyConstraints({advanced: [{torch: true}]}); } catch(e){}
+        
         setTimeout(async () => {
-            const canvas = document.createElement("canvas"); canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            canvas.getContext("2d").drawImage(video, 0, 0); saveToVault(canvas.toDataURL("image/jpeg", 0.9));
+            const canvas = document.createElement("canvas"); 
+            canvas.width = video.videoWidth; 
+            canvas.height = video.videoHeight;
+            canvas.getContext("2d").drawImage(video, 0, 0); 
             
-            if (tmCataractModel) { 
-                const predictions = await tmCataractModel.predict(canvas); 
-                // Assumes class 0 is Cataract, class 1 is Healthy (Adjust based on your Teachable Machine config)
-                let highest = predictions.reduce((prev, current) => (prev.probability > current.probability) ? prev : current);
-                results.surface = `AI Result: ${highest.className} (${(highest.probability*100).toFixed(0)}%)`;
-            } else { results.surface = "Image Captured to Vault (No AI Model loaded)"; }
+            // Save to offline vault
+            saveToVault(canvas.toDataURL("image/jpeg", 0.9));
             
+            // Turn off flash instantly so user isn't blinded
             if (caps.torch) try { await track.applyConstraints({advanced: [{torch: false}]}); } catch(e){}
-            startCamera(); showReport();
+            startCamera(); // Flip back to front camera
+            
+            // Convert image to blob and send to Hugging Face Cloud
+            canvas.toBlob(async (blob) => {
+                try {
+                    // Replace YOUR_TOKEN_HERE with your actual token starting with hf_
+                    const HF_TOKEN = "YOUR_TOKEN_HERE"; 
+                    
+                    const response = await fetch(
+                        "https://api-inference.huggingface.co/models/dima806/cataract_image_detection",
+                        {
+                            headers: { Authorization: `Bearer ${HF_TOKEN}` },
+                            method: "POST",
+                            body: blob,
+                        }
+                    );
+                    
+                    const result = await response.json();
+                    
+                    if (result.error) {
+                        results.surface = "AI Cloud Warming Up. Please try again in 10 seconds.";
+                    } else {
+                        // The API returns the highest probability first
+                        const topMatch = result[0];
+                        const condition = topMatch.label === "normal" ? "Healthy Eye" : topMatch.label;
+                        results.surface = `Cloud AI: ${condition.toUpperCase()} (${(topMatch.score * 100).toFixed(0)}%)`;
+                    }
+                } catch (error) {
+                    results.surface = "Network Error: Could not reach AI server.";
+                }
+                showReport();
+            }, 'image/jpeg');
+
         }, 800);
     }, 2000);
 };
+
 
 // --- Tracking Loop ---
 async function runAILoop() {
