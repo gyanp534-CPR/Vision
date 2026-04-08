@@ -58,6 +58,27 @@
             <button class="btn-room-pass" onclick="passReading()">I Can Read This Clearly</button>
             <button class="btn-room-fail" onclick="failReading()">Too Blurry</button>
         </div>
+<div id="color-room">
+    <h3 style="margin:0; color:#0ea5e9;">Color Vision Test</h3>
+    <p style="font-size:14px; color:#64748b;">What number do you see in the circle?</p>
+    
+    <div id="plate-container">
+        <img id="plate-img" src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Ishihara_9.png" alt="Color Plate">
+    </div>
+
+    <div class="keypad">
+        <button class="key-btn" onclick="checkColor(7)">7</button>
+        <button class="key-btn" onclick="checkColor(9)">9</button>
+        <button class="key-btn" onclick="checkColor(12)">12</button>
+        <button class="key-btn" onclick="checkColor(8)">8</button>
+        <button class="key-btn" onclick="checkColor(5)">5</button>
+        <button class="key-btn" onclick="checkColor(0)">None</button>
+    </div>
+    
+    <button onclick="closeColorRoom()" style="margin-top:20px; background:#64748b; width:100%; max-width:300px;">Exit Test</button>
+</div>
+
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs" type="module"></script>
