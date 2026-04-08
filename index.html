@@ -6,61 +6,96 @@
     <title>Gyanam Vision Pro AI</title>
     <style>
         :root { --primary: #0ea5e9; --bg: #0f172a; --card: #1e293b; --success: #10b981; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; text-align: center; background: var(--bg); color: white; margin: 0; padding-bottom: 40px; }
-        #app-container { display: flex; flex-direction: column; align-items: center; padding: 20px; max-width: 500px; margin: auto; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; text-align: center; background: var(--bg); color: white; margin: 0; overflow-x: hidden; }
         
-        #status-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; width: 100%; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        #video-container { position: relative; width: 280px; height: 280px; border-radius: 50%; overflow: hidden; border: 4px solid var(--primary); background: #000; margin: 10px 0; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        /* Dashboard Styles */
+        #dashboard { padding: 20px; display: flex; flex-direction: column; align-items: center; max-width: 500px; margin: auto; }
+        #status-bar { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; width: 100%; border: 1px solid #334155; }
+        #video-container { position: relative; width: 260px; height: 260px; border-radius: 50%; overflow: hidden; border: 4px solid var(--primary); background: #000; margin: 10px 0; }
+        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
         
-        #controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; width: 100%; }
-        button { flex: 1; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
+        #controls { display: flex; gap: 12px; width: 100%; margin-top: 10px; }
+        button { flex: 1; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; }
         .btn-scan { background: var(--success); }
-        
-        .overlay-card { display: none; background: white; color: #1e293b; padding: 20px; border-radius: 15px; width: 90%; margin-top: 20px; text-align: left; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        #history-list { margin-top: 30px; width: 100%; text-align: left; }
-        .hist-item { background: var(--card); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--primary); font-size: 13px; display: flex; justify-content: space-between; }
+        /* Fullscreen Test Room */
+        #test-room { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: white; color: black; z-index: 9999; flex-direction: column; 
+            align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; 
+        }
+        #mini-cam-container { 
+            position: absolute; top: 20px; right: 20px; width: 90px; height: 90px; 
+            border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); background: black;
+        }
+        #mini-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+        /* Content Styling */
+        #sample-box { 
+            width: 100%; max-width: 400px; min-height: 150px; display: flex; 
+            align-items: center; justify-content: center; padding: 20px; 
+            border: 1px solid #e2e8f0; border-radius: 15px; margin: 30px 0;
+            background: #f8fafc; text-align: center; font-family: serif;
+        }
+        .room-controls { display: flex; gap: 15px; width: 100%; max-width: 400px; }
+        .btn-room-pass { flex: 2; background: var(--success); padding: 18px; border-radius: 12px; color: white; border: none; font-weight: bold; }
+        .btn-room-fail { flex: 1; background: #ef4444; padding: 18px; border-radius: 12px; color: white; border: none; font-weight: bold; }
+
+        /* History & Reports */
+        #report-overlay { display: none; background: white; color: #1e293b; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-top: 20px; text-align: left; border-top: 8px solid var(--primary); }
+        #history-list { margin-top: 30px; width: 100%; text-align: left; padding: 0 20px; box-sizing: border-box; }
+        .hist-item { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); font-size: 13px; }
     </style>
 </head>
 <body>
-    <div id="app-container">
+
+    <div id="dashboard">
         <div id="status-bar">
-            <div id="mode-text" style="font-size:11px; color:var(--primary); font-weight:bold; letter-spacing: 1px;">LOADING AI...</div>
-            <div id="dist-msg" style="font-size: 15px; margin-top: 5px;">Initializing system...</div>
+            <div id="mode-text" style="font-size:11px; color:var(--primary); font-weight:bold; letter-spacing: 1px;">SYSTEM READY</div>
+            <div id="dist-msg" style="font-size: 15px; margin-top: 5px;">Choose a test mode to begin.</div>
         </div>
 
-        <div id="video-container"><video id="webcam" autoplay playsinline></video></div>
+        <div id="video-container">
+            <video id="webcam" autoplay playsinline></video>
+        </div>
 
         <div id="controls">
-            <button onclick="setMode('reading')">📖 Reading Test</button>
+            <button onclick="startReadingTest()">📖 Reading Test</button>
             <button onclick="setMode('scan')" class="btn-scan">📸 Retina Scan</button>
         </div>
 
-        <div id="reading-area" class="overlay-card">
-            <h3 style="margin:0">Near Vision Test</h3>
-            <p id="sample-text" style="font-size:16px; margin: 15px 0; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
-                Can you read this text clearly?
-            </p>
-            <div style="display:flex; gap:10px;">
-                <button onclick="passReading()" style="flex:1">Yes, Clear</button>
-                <button onclick="failReading()" style="flex:1; background:#ef4444;">Blurry</button>
-            </div>
-        </div>
-
-        <div id="report-card" class="overlay-card">
-            <h3 style="margin:0; color:var(--primary);">Screening Report</h3>
-            <p style="margin: 10px 0;"><strong>Date:</strong> <span id="r-date"></span></p>
-            <p><strong>Acuity:</strong> <b id="r-vision"></b></p>
-            <p><strong>Surface/Retina:</strong> <b id="r-surface"></b></p>
-            <button onclick="location.reload()" style="width:100%; background:#334155; margin-top: 10px;">Reset App</button>
+        <div id="report-overlay">
+            <h3 style="margin:0; color:var(--primary);">Final Report</h3>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <p><strong>Acuity:</strong> <span id="r-vision">--</span></p>
+            <p><strong>Scan:</strong> <span id="r-surface">--</span></p>
+            <button onclick="location.reload()" style="width:100%; background:#334155; color:white; padding:12px; border:none; border-radius:10px; margin-top:10px;">New Session</button>
         </div>
 
         <div id="history-list">
-            <h4 style="color:var(--primary); margin-bottom: 10px;">Recent History</h4>
+            <h4 style="color:var(--primary); margin-bottom: 10px;">Recent Activity</h4>
             <div id="hist-items"></div>
+        </div>
+    </div>
+
+    <div id="test-room">
+        <div id="mini-cam-container">
+            <video id="mini-video" autoplay playsinline></video>
+        </div>
+        
+        <div id="room-header" style="text-align:center;">
+            <p id="room-dist-msg" style="color: #64748b; font-weight: 600;">Aligning...</p>
+            <h2 style="margin: 5px 0;">Reading Test</h2>
+        </div>
+
+        <div id="sample-box">
+            <span id="room-text">Initializing text...</span>
+        </div>
+
+        <div class="room-controls">
+            <button class="btn-room-pass" onclick="passReading()">I Can Read This Clearly</button>
+            <button class="btn-room-fail" onclick="failReading()">Too Blurry</button>
         </div>
     </div>
 
