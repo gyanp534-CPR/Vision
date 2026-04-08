@@ -11,6 +11,7 @@ let faceLandmarker;
 let currentMode = "dashboard"; // dashboard, reading, scan
 let readingLevel = 18; 
 let results = { reading: "Not Tested", surface: "Not Tested" };
+let isLowLightBoost = false;
 
 const readingSamples = [
     "Vision is a window to the world around us.",
@@ -103,17 +104,49 @@ function closeTestRoom() {
 
 // Scan Logic
 async function performMacroScan() {
+    distMsg.innerHTML = "<b style='color:#f59e0b'>Adjusting Focus & Light...</b>";
+    
     const track = video.srcObject.getVideoTracks()[0];
     const caps = track.getCapabilities();
-    if (caps.torch) await track.applyConstraints({advanced: [{torch: true}]});
 
+    // 1. Force Torch if available
+    if (caps.torch) {
+        try { await track.applyConstraints({advanced: [{torch: true}]}); } catch(e){}
+    }
+
+    // 2. Short delay to allow exposure to settle
     setTimeout(async () => {
-        results.surface = "Healthy Scan Captured";
-        if (caps.torch) await track.applyConstraints({advanced: [{torch: false}]});
-        startCamera("user"); // Flip back to dashboard cam
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        
+        // Apply software boost to the captured image if Night Mode is ON
+        if (isLowLightBoost) ctx.filter = "brightness(1.2) contrast(1.1)";
+        
+        ctx.drawImage(video, 0, 0);
+
+        // 3. Simple brightness check to ensure scan isn't pitch black
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let brightness = 0;
+        for (let i = 0; i < data.length; i+=4) brightness += data[i];
+        
+        if (brightness / (data.length/4) < 35) {
+            results.surface = "Scan Fail: Too Dark";
+        } else {
+            results.surface = "High Quality Scan Captured";
+        }
+
+        // Turn off Torch
+        if (caps.torch) {
+            try { await track.applyConstraints({advanced: [{torch: false}]}); } catch(e){}
+        }
+        
+        startCamera("user"); // Return to selfie view
         showFinalReport();
-    }, 600);
+    }, 800);
 }
+
 
 function showFinalReport() {
     reportOverlay.style.display = "block";
@@ -132,5 +165,21 @@ function renderHistory() {
         <div class="hist-item"><b>${i.date}</b>: Vision ${i.v} | Scan ${i.s}</div>
     `).join('');
 }
+
+window.toggleLowLight = async () => {
+    isLowLightBoost = !isLowLightBoost;
+    const btn = document.getElementById("lowlight-btn");
+    const videoEl = document.getElementById("webcam");
+
+    if (isLowLightBoost) {
+        btn.innerText = "🌙 Night Mode: ON";
+        btn.style.background = "#8b5cf6";
+        videoEl.classList.add("low-light-boost");
+    } else {
+        btn.innerText = "🌙 Night Mode: OFF";
+        btn.style.background = "#4b5563";
+        videoEl.classList.remove("low-light-boost");
+    }
+};
 
 initAI();
